@@ -1,0 +1,33 @@
+{
+  "name": "jsr",
+  "version": "0.1.0",
+  "description": "jsr.io package manager for node",
+  "bin": {
+    "jsr": "./dist/bin.js"
+  },
+  "main": "dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist-esm/index.js",
+      "require": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "cli": "ts-node src/bin.ts",
+    "build": "rimraf dist dist-esm && tsc && tsc -p tsconfig.esm.json",
+    "prepublishOnly": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "files": ["dist/", "dist-esm/"],
+  "devDependencies": {
+    "@types/node": "^20.11.18",
+    "rimraf": "^5.0.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "kolorist": "^1.8.0"
+  }
+}

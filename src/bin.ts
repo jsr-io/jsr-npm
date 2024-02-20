@@ -3,9 +3,8 @@ import * as kl from "kolorist";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { parseArgs } from "node:util";
-import { install, remove, setupNpmRc } from "./commands";
-import { JsrPackage, findLockFile, setDebug } from "./utils";
-import { detectPackageManager } from "./pkg_manager";
+import { install, remove } from "./commands";
+import { JsrPackage, setDebug } from "./utils";
 
 const args = process.argv.slice(2);
 

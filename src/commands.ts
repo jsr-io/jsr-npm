@@ -1,7 +1,7 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
-import { JsrPackage, findLockFile } from "./utils";
-import { detectPackageManager } from "./pkg_manager";
+import { JsrPackage } from "./utils";
+import { detectPackageManager, getProjectDir } from "./pkg_manager";
 
 const JSR_NPMRC = `@jsr:registry=https://npm.jsr.io\n`;
 
@@ -27,16 +27,15 @@ export interface InstallOptions {
 }
 
 export async function install(packages: JsrPackage[], options: InstallOptions) {
-  const lockFilePath = await findLockFile(process.cwd());
-  const projectDir = path.dirname(lockFilePath);
+  const { projectDir, lockFilePath } = await getProjectDir(process.cwd());
   await setupNpmRc(projectDir);
 
-  const pkgManager = await detectPackageManager(lockFilePath);
+  const pkgManager = await detectPackageManager(lockFilePath, projectDir);
   await pkgManager.install(packages, options);
 }
 
 export async function remove(packages: JsrPackage[]) {
-  const lockFilePath = await findLockFile(process.cwd());
-  const pkgManager = await detectPackageManager(lockFilePath);
+  const { projectDir, lockFilePath } = await getProjectDir(process.cwd());
+  const pkgManager = await detectPackageManager(lockFilePath, projectDir);
   await pkgManager.remove(packages);
 }

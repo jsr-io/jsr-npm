@@ -1,7 +1,7 @@
 import { promisify } from "node:util";
 import * as path from "node:path";
 import { InstallOptions } from "./commands";
-import { JsrPackage, logDebug } from "./utils";
+import { JsrPackage, findLockFile, findPackageJson, logDebug } from "./utils";
 import * as cp from "node:child_process";
 
 const execAsync = promisify(cp.exec);
@@ -84,17 +84,40 @@ class Pnpm implements PackageManager {
   }
 }
 
-export function detectPackageManager(lockfilePath: string): PackageManager {
-  const filename = path.basename(lockfilePath);
-  const cwd = path.dirname(lockfilePath);
-
-  if (filename === "package-lock.json") {
-    return new Npm(cwd);
-  } else if (filename === "yarn.lock") {
-    return new Yarn(cwd);
-  } else if (filename === "pnpm-lock.yml") {
-    return new Pnpm(cwd);
+export async function getProjectDir(cwd: string): Promise<{
+  projectDir: string;
+  lockFilePath: string | null;
+}> {
+  const lockFilePath = await findLockFile(cwd);
+  if (lockFilePath !== null) {
+    const projectDir = path.dirname(lockFilePath);
+    return { lockFilePath, projectDir };
   }
 
-  throw new Error("Could not determine package manager");
+  const pkgJsonPath = await findPackageJson(cwd);
+  if (pkgJsonPath !== null) {
+    const projectDir = path.dirname(pkgJsonPath);
+    return { lockFilePath: null, projectDir };
+  }
+
+  return { lockFilePath: null, projectDir: cwd };
+}
+
+export function detectPackageManager(
+  lockFilePath: string | null,
+  projectDir: string
+): PackageManager {
+  if (lockFilePath !== null) {
+    const filename = path.basename(lockFilePath);
+    if (filename === "package-lock.json") {
+      return new Npm(projectDir);
+    } else if (filename === "yarn.lock") {
+      return new Yarn(projectDir);
+    } else if (filename === "pnpm-lock.yml") {
+      return new Pnpm(projectDir);
+    }
+  }
+
+  // Fall back to npm if no lockfile is present.
+  return new Npm(projectDir);
 }

@@ -53,7 +53,23 @@ async function fileExists(file: string): Promise<boolean> {
   }
 }
 
-export async function findLockFile(dir: string): Promise<string> {
+export async function findPackageJson(dir: string): Promise<string | null> {
+  const file = path.join(dir, "package.json");
+
+  if (await fileExists(file)) {
+    return file;
+  }
+
+  const prev = dir;
+  dir = path.dirname(dir);
+  if (dir === prev) {
+    return null;
+  }
+
+  return findPackageJson(dir);
+}
+
+export async function findLockFile(dir: string): Promise<string | null> {
   const npmLockfile = path.join(dir, "package-lock.json");
   if (await fileExists(npmLockfile)) {
     logDebug("Using npm package manager");
@@ -75,7 +91,7 @@ export async function findLockFile(dir: string): Promise<string> {
   const prev = dir;
   dir = path.dirname(dir);
   if (dir === prev) {
-    throw new Error(`Could not find lockfile.`);
+    return null;
   }
 
   return findLockFile(dir);

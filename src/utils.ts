@@ -45,8 +45,12 @@ export class JsrPackage {
 }
 
 async function fileExists(file: string): Promise<boolean> {
-  const stat = await fs.promises.stat(file);
-  return stat.isFile();
+  try {
+    const stat = await fs.promises.stat(file);
+    return stat.isFile();
+  } catch (err) {
+    return false;
+  }
 }
 
 export async function findLockFile(dir: string): Promise<string> {

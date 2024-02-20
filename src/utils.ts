@@ -1,5 +1,6 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
+import { PkgManagerName } from "./pkg_manager";
 
 export let DEBUG = false;
 export function setDebug(enabled: boolean) {
@@ -13,6 +14,8 @@ export function logDebug(msg: string) {
 
 const EXTRACT_REG = /^@([a-z][a-z0-9-]+)\/([a-z0-9-]+)$/;
 const EXTRACT_REG_PROXY = /^@jsr\/([a-z][a-z0-9-]+)__([a-z0-9-]+)$/;
+
+export class JsrPackageNameError extends Error {}
 
 export class JsrPackage {
   static from(input: string) {
@@ -30,7 +33,9 @@ export class JsrPackage {
       return new JsrPackage(scope, name);
     }
 
-    throw new Error(`Invalid jsr package name: ${input}`);
+    throw new JsrPackageNameError(
+      `Invalid jsr package name: A jsr package name must have the format @<scope>/<name>, but got "${input}"`
+    );
   }
 
   private constructor(public scope: string, public name: string) {}
@@ -53,46 +58,76 @@ async function fileExists(file: string): Promise<boolean> {
   }
 }
 
-export async function findPackageJson(dir: string): Promise<string | null> {
-  const file = path.join(dir, "package.json");
-
-  if (await fileExists(file)) {
-    return file;
-  }
-
-  const prev = dir;
-  dir = path.dirname(dir);
-  if (dir === prev) {
-    return null;
-  }
-
-  return findPackageJson(dir);
+export interface ProjectInfo {
+  projectDir: string;
+  pkgManagerName: PkgManagerName | null;
+  pkgJsonPath: string | null;
 }
-
-export async function findLockFile(dir: string): Promise<string | null> {
+export async function findProjectDir(
+  cwd: string,
+  dir: string = cwd,
+  result: ProjectInfo = {
+    projectDir: cwd,
+    pkgManagerName: null,
+    pkgJsonPath: null,
+  }
+): Promise<ProjectInfo> {
   const npmLockfile = path.join(dir, "package-lock.json");
   if (await fileExists(npmLockfile)) {
-    logDebug("Using npm package manager");
-    return npmLockfile;
+    logDebug(`Detected npm from lockfile ${npmLockfile}`);
+    result.projectDir = dir;
+    result.pkgManagerName = "npm";
+    return result;
   }
 
   const yarnLockFile = path.join(dir, "yarn.lock");
   if (await fileExists(yarnLockFile)) {
-    logDebug("Using yarn package manager");
-    return yarnLockFile;
+    logDebug(`Detected yarn from lockfile ${yarnLockFile}`);
+    result.projectDir = dir;
+    result.pkgManagerName = "yarn";
+    return result;
   }
 
   const pnpmLockfile = path.join(dir, "pnpm-lock.yaml");
   if (await fileExists(pnpmLockfile)) {
-    logDebug("Using pnpm package manager");
-    return pnpmLockfile;
+    logDebug(`Detected pnpm from lockfile ${pnpmLockfile}`);
+    result.projectDir = dir;
+    result.pkgManagerName = "pnpm";
+    return result;
+  }
+
+  const pkgJsonPath = path.join(dir, "package.json");
+  if (await fileExists(pkgJsonPath)) {
+    logDebug(`Found package.json at ${pkgJsonPath}`);
+    result.projectDir = dir;
   }
 
   const prev = dir;
   dir = path.dirname(dir);
   if (dir === prev) {
-    return null;
+    return result;
   }
 
-  return findLockFile(dir);
+  return findProjectDir(cwd, dir, result);
+}
+
+const PERIODS = {
+  day: 24 * 60 * 60 * 1000,
+  hour: 60 * 60 * 1000,
+  minute: 60 * 1000,
+  seconds: 1000,
+};
+
+export function prettyTime(diff: number) {
+  if (diff > PERIODS.day) {
+    return Math.floor(diff / PERIODS.day) + "d";
+  } else if (diff > PERIODS.hour) {
+    return Math.floor(diff / PERIODS.hour) + "h";
+  } else if (diff > PERIODS.minute) {
+    return Math.floor(diff / PERIODS.minute) + "m";
+  } else if (diff > PERIODS.seconds) {
+    return Math.floor(diff / PERIODS.seconds) + "s";
+  }
+
+  return diff + "ms";
 }

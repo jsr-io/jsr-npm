@@ -1,7 +1,8 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
+import * as kl from "kolorist";
 import { JsrPackage } from "./utils";
-import { detectPackageManager, getProjectDir } from "./pkg_manager";
+import { getPkgManager } from "./pkg_manager";
 
 const JSR_NPMRC = `@jsr:registry=https://npm.jsr.io\n`;
 
@@ -22,20 +23,24 @@ export async function setupNpmRc(dir: string) {
   }
 }
 
-export interface InstallOptions {
+export interface BaseOptions {
+  pkgManagerName: "npm" | "yarn" | "pnpm" | null;
+}
+
+export interface InstallOptions extends BaseOptions {
   mode: "dev" | "prod" | "optional";
 }
 
 export async function install(packages: JsrPackage[], options: InstallOptions) {
-  const { projectDir, lockFilePath } = await getProjectDir(process.cwd());
-  await setupNpmRc(projectDir);
+  console.log(`Installing ${kl.cyan(packages.join(", "))}...`);
+  const pkgManager = await getPkgManager(process.cwd(), options.pkgManagerName);
+  await setupNpmRc(pkgManager.cwd);
 
-  const pkgManager = await detectPackageManager(lockFilePath, projectDir);
   await pkgManager.install(packages, options);
 }
 
-export async function remove(packages: JsrPackage[]) {
-  const { projectDir, lockFilePath } = await getProjectDir(process.cwd());
-  const pkgManager = await detectPackageManager(lockFilePath, projectDir);
+export async function remove(packages: JsrPackage[], options: BaseOptions) {
+  console.log(`Removing ${kl.cyan(packages.join(", "))}...`);
+  const pkgManager = await getPkgManager(process.cwd(), options.pkgManagerName);
   await pkgManager.remove(packages);
 }

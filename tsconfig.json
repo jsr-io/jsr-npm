@@ -6,5 +6,6 @@
     "outDir": "dist/",
     "declaration": true,
     "sourceMap": true,
+    "isolatedModules": true
   }
 }

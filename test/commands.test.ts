@@ -6,7 +6,7 @@ describe("install", () => {
   it("jsr i @std/encoding - resolve latest version", async () => {
     await withTempEnv(["i", "@std/encoding"], async (getPkgJson, dir) => {
       const pkgJson = await getPkgJson();
-      assert(
+      assert.ok(
         pkgJson.dependencies && "@std/encoding" in pkgJson.dependencies,
         "Missing dependency entry"
       );
@@ -17,7 +17,7 @@ describe("install", () => {
       );
 
       const depPath = path.join(dir, "node_modules", "@std", "encoding");
-      assert(await isDirectory(depPath), "Not installed in node_modules");
+      assert.ok(await isDirectory(depPath), "Not installed in node_modules");
     });
   });
 
@@ -96,7 +96,7 @@ describe("install", () => {
     await withTempEnv(
       ["i", "--npm", "@std/encoding@0.216.0"],
       async (_, dir) => {
-        assert(
+        assert.ok(
           await isFile(path.join(dir, "package-lock.json")),
           "npm lockfile not created"
         );
@@ -108,7 +108,7 @@ describe("install", () => {
     await withTempEnv(
       ["i", "--yarn", "@std/encoding@0.216.0"],
       async (_, dir) => {
-        assert(
+        assert.ok(
           await isFile(path.join(dir, "yarn.lock")),
           "yarn lockfile not created"
         );
@@ -120,7 +120,7 @@ describe("install", () => {
     await withTempEnv(
       ["i", "--pnpm", "@std/encoding@0.216.0"],
       async (_, dir) => {
-        assert(
+        assert.ok(
           await isFile(path.join(dir, "pnpm-lock.yaml")),
           "pnpm lockfile not created"
         );
@@ -140,7 +140,7 @@ describe("remove", () => {
         assert.equal(pkgJson.dependencies, undefined);
 
         const depPath = path.join(dir, "node_modules", "@std", "encoding");
-        assert(
+        assert.ok(
           !(await isDirectory(depPath)),
           "Folder in node_modules not removed"
         );

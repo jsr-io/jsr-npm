@@ -1,6 +1,7 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
 import { PkgManagerName } from "./pkg_manager";
+import { spawn } from "node:child_process";
 
 export let DEBUG = false;
 export function setDebug(enabled: boolean) {
@@ -12,8 +13,8 @@ export function logDebug(msg: string) {
   }
 }
 
-const EXTRACT_REG = /^@([a-z][a-z0-9-]+)\/([a-z0-9-]+)$/;
-const EXTRACT_REG_PROXY = /^@jsr\/([a-z][a-z0-9-]+)__([a-z0-9-]+)$/;
+const EXTRACT_REG = /^@([a-z][a-z0-9-]+)\/([a-z0-9-]+)(@.+)?$/;
+const EXTRACT_REG_PROXY = /^@jsr\/([a-z][a-z0-9-]+)__([a-z0-9-]+)(@.+)?$/;
 
 export class JsrPackageNameError extends Error {}
 
@@ -23,14 +24,16 @@ export class JsrPackage {
     if (exactMatch !== null) {
       const scope = exactMatch[1];
       const name = exactMatch[2];
-      return new JsrPackage(scope, name);
+      const version = exactMatch[3] ?? "";
+      return new JsrPackage(scope, name, version);
     }
 
     const proxyMatch = input.match(EXTRACT_REG_PROXY);
     if (proxyMatch !== null) {
       const scope = proxyMatch[1];
       const name = proxyMatch[2];
-      return new JsrPackage(scope, name);
+      const version = proxyMatch[3] ?? "";
+      return new JsrPackage(scope, name, version);
     }
 
     throw new JsrPackageNameError(
@@ -38,7 +41,11 @@ export class JsrPackage {
     );
   }
 
-  private constructor(public scope: string, public name: string) {}
+  private constructor(
+    public scope: string,
+    public name: string,
+    public version: string
+  ) {}
 
   toNpmPackage(): string {
     return `@jsr/${this.scope}__${this.name}`;
@@ -130,4 +137,15 @@ export function prettyTime(diff: number) {
   }
 
   return diff + "ms";
+}
+
+export async function exec(cmd: string, args: string[], cwd: string) {
+  const cp = spawn(cmd, args, { stdio: "inherit", cwd });
+
+  return new Promise<void>((resolve) => {
+    cp.on("exit", (code) => {
+      if (code === 0) resolve();
+      else process.exit(code ?? 1);
+    });
+  });
 }

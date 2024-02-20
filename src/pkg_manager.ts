@@ -1,26 +1,17 @@
 import { InstallOptions } from "./commands";
-import { JsrPackage, findProjectDir } from "./utils";
-import { spawn } from "node:child_process";
+import { JsrPackage, exec, findProjectDir } from "./utils";
 import * as kl from "kolorist";
 
-const exec = async (cmd: string, args: string[], cwd: string) => {
+async function execWithLog(cmd: string, args: string[], cwd: string) {
   console.log(kl.dim(`$ ${cmd} ${args.join(" ")}`));
-
-  const cp = spawn(cmd, args, { stdio: "inherit" });
-
-  return new Promise<void>((resolve) => {
-    cp.on("exit", (code) => {
-      if (code === 0) resolve();
-      else process.exit(code ?? 1);
-    });
-  });
-};
+  return exec(cmd, args, cwd);
+}
 
 function modeToFlag(mode: InstallOptions["mode"]): string {
   return mode === "dev"
-    ? "--save-dev "
+    ? "--save-dev"
     : mode === "optional"
-    ? "--save-optional "
+    ? "--save-optional"
     : "";
 }
 
@@ -47,11 +38,11 @@ class Npm implements PackageManager {
     }
     args.push(...toPackageArgs(packages));
 
-    await exec("npm", args, this.cwd);
+    await execWithLog("npm", args, this.cwd);
   }
 
   async remove(packages: JsrPackage[]) {
-    await exec(
+    await execWithLog(
       "npm",
       ["remove", ...packages.map((pkg) => pkg.toString())],
       this.cwd
@@ -69,11 +60,11 @@ class Yarn implements PackageManager {
       args.push(mode);
     }
     args.push(...toPackageArgs(packages));
-    await exec("yarn", args, this.cwd);
+    await execWithLog("yarn", args, this.cwd);
   }
 
   async remove(packages: JsrPackage[]) {
-    await exec(
+    await execWithLog(
       "yarn",
       ["remove", ...packages.map((pkg) => pkg.toString())],
       this.cwd
@@ -91,11 +82,11 @@ class Pnpm implements PackageManager {
       args.push(mode);
     }
     args.push(...toPackageArgs(packages));
-    await exec("pnpm", args, this.cwd);
+    await execWithLog("pnpm", args, this.cwd);
   }
 
   async remove(packages: JsrPackage[]) {
-    await exec(
+    await execWithLog(
       "yarn",
       ["remove", ...packages.map((pkg) => pkg.toString())],
       this.cwd

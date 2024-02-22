@@ -2,6 +2,10 @@
   "name": "jsr",
   "version": "0.6.0",
   "description": "jsr.io package manager for node",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/denoland/jsr-node-cli.git"
+  },
   "bin": {
     "jsr": "./dist/bin.js"
   },

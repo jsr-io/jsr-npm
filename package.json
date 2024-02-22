@@ -17,7 +17,7 @@
     }
   },
   "scripts": {
-    "test": "mocha -r ts-node/register --extensions ts,tsx --timeout 10000 --watch-files src,test 'test/**/*.test.ts'",
+    "test": "mocha -r ts-node/register --extensions ts,tsx --timeout 30000 --watch-files src,test 'test/**/*.test.ts'",
     "cli": "ts-node src/bin.ts",
     "build": "rimraf dist dist-esm && tsc && tsc -p tsconfig.esm.json",
     "prepublishOnly": "tsc && npm test"

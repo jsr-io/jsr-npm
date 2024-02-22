@@ -13,7 +13,7 @@
     }
   },
   "scripts": {
-    "test": "node -r ts-node/register --test **/*.test.ts",
+    "test": "mocha -r ts-node/register --extensions ts,tsx --timeout 10000 --watch-files src,test 'test/**/*.test.ts'",
     "cli": "ts-node src/bin.ts",
     "build": "rimraf dist dist-esm && tsc && tsc -p tsconfig.esm.json",
     "prepublishOnly": "tsc && npm test"
@@ -26,7 +26,9 @@
     "dist-esm/"
   ],
   "devDependencies": {
+    "@types/mocha": "^10.0.6",
     "@types/node": "^20.11.18",
+    "mocha": "^10.3.0",
     "rimraf": "^5.0.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"

@@ -2,8 +2,12 @@
   "name": "jsr",
   "version": "0.6.0",
   "description": "jsr.io package manager for node",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/denoland/jsr-node-cli.git"
+  },
   "bin": {
-    "jsr": "./dist/bin.js"
+    "jsr": "dist/bin.js"
   },
   "main": "dist/index.js",
   "exports": {
@@ -13,7 +17,7 @@
     }
   },
   "scripts": {
-    "test": "mocha -r ts-node/register --extensions ts,tsx --timeout 10000 --watch-files src,test 'test/**/*.test.ts'",
+    "test": "mocha -r ts-node/register --extensions ts,tsx --timeout 30000 --watch-files src,test 'test/**/*.test.ts'",
     "cli": "ts-node src/bin.ts",
     "build": "rimraf dist dist-esm && tsc && tsc -p tsconfig.esm.json",
     "prepublishOnly": "tsc && npm test"

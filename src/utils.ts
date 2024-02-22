@@ -142,7 +142,7 @@ export function prettyTime(diff: number) {
 }
 
 export async function exec(cmd: string, args: string[], cwd: string) {
-  const cp = spawn(cmd, args, { stdio: "inherit", cwd });
+  const cp = spawn(cmd, args, { stdio: "inherit", cwd, shell: true });
 
   return new Promise<void>((resolve) => {
     cp.on("exit", (code) => {

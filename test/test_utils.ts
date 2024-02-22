@@ -15,7 +15,8 @@ export interface PkgJson {
 
 export async function runJsr(args: string[], cwd: string) {
   const bin = path.join(__dirname, "..", "src", "bin.ts");
-  return await exec("npx", ["ts-node", bin, ...args], cwd);
+  const tsNode = path.join(__dirname, "..", "node_modules", ".bin", "ts-node");
+  return await exec(tsNode, [bin, ...args], cwd);
 }
 
 export async function withTempEnv(

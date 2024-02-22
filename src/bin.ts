@@ -33,7 +33,7 @@ ${prettyPrintRow([
 Commands:
 ${prettyPrintRow([
   ["i, install, add", "Install one or more jsr packages"],
-  ["r, uninstall, remove", "Remove one ore more jsr packages"],
+  ["r, uninstall, remove", "Remove one or more jsr packages"],
 ])}
 
 Options:

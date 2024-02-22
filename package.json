@@ -1,6 +1,6 @@
 {
   "name": "jsr",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "jsr.io package manager for node",
   "repository": {
     "type": "git",

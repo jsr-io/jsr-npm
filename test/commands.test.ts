@@ -1,4 +1,5 @@
 import * as path from "path";
+import * as fs from "fs";
 import { isDirectory, isFile, runJsr, withTempEnv } from "./test_utils";
 import * as assert from "node:assert/strict";
 
@@ -18,6 +19,13 @@ describe("install", () => {
 
       const depPath = path.join(dir, "node_modules", "@std", "encoding");
       assert.ok(await isDirectory(depPath), "Not installed in node_modules");
+
+      const npmrcPath = path.join(dir, ".npmrc");
+      const npmRc = await fs.promises.readFile(npmrcPath, "utf-8");
+      assert.ok(
+        npmRc.includes("@jsr:registry=https://npm.jsr.io"),
+        "Missing npmrc registry"
+      );
     });
   });
 

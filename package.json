@@ -1,6 +1,6 @@
 {
   "name": "jsr",
-  "version": "0.1.0",
+  "version": "0.6.0",
   "description": "jsr.io package manager for node",
   "bin": {
     "jsr": "./dist/bin.js"

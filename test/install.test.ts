@@ -1,5 +1,3 @@
-import { describe, it } from "node:test";
-import * as fs from "fs";
 import * as path from "path";
 import { isDirectory, isFile, runJsr, withTempEnv } from "./test_utils";
 import * as assert from "node:assert/strict";

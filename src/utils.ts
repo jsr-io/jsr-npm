@@ -13,8 +13,8 @@ export function logDebug(msg: string) {
   }
 }
 
-const EXTRACT_REG = /^@([a-z][a-z0-9-]+)\/([a-z0-9-]+)(@.+)?$/;
-const EXTRACT_REG_PROXY = /^@jsr\/([a-z][a-z0-9-]+)__([a-z0-9-]+)(@.+)?$/;
+const EXTRACT_REG = /^@([a-z][a-z0-9-]+)\/([a-z0-9-]+)(@(.+))?$/;
+const EXTRACT_REG_PROXY = /^@jsr\/([a-z][a-z0-9-]+)__([a-z0-9-]+)(@(.+))?$/;
 
 export class JsrPackageNameError extends Error {}
 
@@ -24,7 +24,7 @@ export class JsrPackage {
     if (exactMatch !== null) {
       const scope = exactMatch[1];
       const name = exactMatch[2];
-      const version = exactMatch[3] ?? "";
+      const version = exactMatch[4] ?? null;
       return new JsrPackage(scope, name, version);
     }
 
@@ -32,7 +32,7 @@ export class JsrPackage {
     if (proxyMatch !== null) {
       const scope = proxyMatch[1];
       const name = proxyMatch[2];
-      const version = proxyMatch[3] ?? "";
+      const version = proxyMatch[4] ?? null;
       return new JsrPackage(scope, name, version);
     }
 
@@ -44,15 +44,17 @@ export class JsrPackage {
   private constructor(
     public scope: string,
     public name: string,
-    public version: string
+    public version: string | null
   ) {}
 
   toNpmPackage(): string {
-    return `@jsr/${this.scope}__${this.name}`;
+    const version = this.version !== null ? `@${this.version}` : "";
+    return `@jsr/${this.scope}__${this.name}${version}`;
   }
 
   toString() {
-    return `@${this.scope}/${this.name}`;
+    const version = this.version !== null ? `@${this.version}` : "";
+    return `@${this.scope}/${this.name}${version}`;
   }
 }
 

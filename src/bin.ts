@@ -3,7 +3,7 @@ import * as kl from "kolorist";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { parseArgs } from "node:util";
-import { install, remove } from "./commands";
+import { install, publish, remove } from "./commands";
 import { JsrPackage, JsrPackageNameError, prettyTime, setDebug } from "./utils";
 import { PkgManagerName } from "./pkg_manager";
 
@@ -34,6 +34,7 @@ Commands:
 ${prettyPrintRow([
   ["i, install, add", "Install one or more jsr packages"],
   ["r, uninstall, remove", "Remove one or more jsr packages"],
+  ["publish", "Publish a package to the JSR registry (experimental)"],
 ])}
 
 Options:
@@ -48,10 +49,17 @@ ${prettyPrintRow([
   ["--yarn", "Use yarn to remove and install packages."],
   ["--pnpm", "Use pnpm to remove and install packages."],
   ["--bun", "Use bun to remove and install packages."],
+  [
+    "--dry-run",
+    "Prepare package, but don't publish when running 'jsr publish'.",
+  ],
   ["--verbose", "Show additional debugging information."],
   ["-h, --help", "Show this help text."],
   ["--version", "Print the version number."],
 ])}
+
+Environment variables:
+  JSR_URL  Use a different registry url for the publish command
 `);
 }
 
@@ -80,6 +88,7 @@ if (args.length === 0) {
       "save-prod": { type: "boolean", default: true, short: "P" },
       "save-dev": { type: "boolean", default: false, short: "D" },
       "save-optional": { type: "boolean", default: false, short: "O" },
+      "dry-run": { type: "boolean", default: false },
       npm: { type: "boolean", default: false },
       yarn: { type: "boolean", default: false },
       pnpm: { type: "boolean", default: false },
@@ -134,6 +143,9 @@ if (args.length === 0) {
       const packages = getPackages(options.positionals);
       await remove(packages, { pkgManagerName });
     });
+  } else if (cmd === "publish") {
+    const dryRun = options.values["dry-run"] ?? false;
+    run(() => publish(process.cwd(), dryRun));
   } else {
     console.error(kl.red(`Unknown command: ${cmd}`));
     console.log();

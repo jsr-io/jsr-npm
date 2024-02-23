@@ -1,7 +1,7 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
 import * as kl from "kolorist";
-import { JsrPackage } from "./utils";
+import { JsrPackage, exec } from "./utils";
 import { Bun, PkgManagerName, getPkgManager } from "./pkg_manager";
 
 const NPMRC_FILE = ".npmrc";
@@ -91,4 +91,10 @@ export async function remove(packages: JsrPackage[], options: BaseOptions) {
   const pkgManager = await getPkgManager(process.cwd(), options.pkgManagerName);
   console.log(`Removing ${kl.cyan(packages.join(", "))}...`);
   await pkgManager.remove(packages);
+}
+
+export async function publish(cwd: string, dryRun: boolean) {
+  const args = ["publish"];
+  if (dryRun) args.push("--dry-run");
+  await exec("deno", args, cwd);
 }

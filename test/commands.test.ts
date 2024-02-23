@@ -1,6 +1,12 @@
 import * as path from "path";
 import * as fs from "fs";
-import { isDirectory, isFile, runJsr, withTempEnv } from "./test_utils";
+import {
+  isDirectory,
+  isFile,
+  runInTempDir,
+  runJsr,
+  withTempEnv,
+} from "./test_utils";
 import * as assert from "node:assert/strict";
 
 describe("install", () => {
@@ -250,5 +256,33 @@ describe("remove", () => {
         assert.equal(pkgJson.dependencies, undefined);
       }
     );
+  });
+});
+
+// This is experimental and under heavy development on the deno side
+describe.skip("publish", () => {
+  it("should publish a package", async () => {
+    await runInTempDir(async (dir) => {
+      const pkgJsonPath = path.join(dir, "package.json");
+      const pkgJson = JSON.parse(
+        await fs.promises.readFile(pkgJsonPath, "utf-8")
+      );
+      pkgJson.exports = {
+        ".": "./mod.js",
+      };
+      await fs.promises.writeFile(
+        pkgJsonPath,
+        JSON.stringify(pkgJson),
+        "utf-8"
+      );
+
+      await fs.promises.writeFile(
+        path.join(dir, "mod.js"),
+        "export const value = 42;",
+        "utf-8"
+      );
+
+      await runJsr(["publish", "--dry-run"], dir);
+    });
   });
 });

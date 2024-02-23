@@ -26,11 +26,7 @@ export async function runJsr(
   return await exec(tsNode, [bin, ...args], cwd, env);
 }
 
-export async function withTempEnv(
-  args: string[],
-  fn: (getPkgJson: () => Promise<PkgJson>, dir: string) => Promise<void>,
-  options: { env?: Record<string, string> } = {}
-): Promise<void> {
+export async function runInTempDir(fn: (dir: string) => Promise<void>) {
   const dir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "jsr-cli"));
 
   await fs.promises.writeFile(
@@ -46,17 +42,26 @@ export async function withTempEnv(
     ),
     "utf-8"
   );
-
   try {
+    await fn(dir);
+  } finally {
+    await fs.promises.rm(dir, { recursive: true, force: true });
+  }
+}
+
+export async function withTempEnv(
+  args: string[],
+  fn: (getPkgJson: () => Promise<PkgJson>, dir: string) => Promise<void>,
+  options: { env?: Record<string, string> } = {}
+): Promise<void> {
+  await runInTempDir(async (dir) => {
     await runJsr(args, dir, options.env);
     const pkgJson = async () =>
       JSON.parse(
         await fs.promises.readFile(path.join(dir, "package.json"), "utf-8")
       ) as PkgJson;
     await fn(pkgJson, dir);
-  } finally {
-    fs.promises.rm(dir, { recursive: true, force: true });
-  }
+  });
 }
 
 export async function isDirectory(path: string): Promise<boolean> {

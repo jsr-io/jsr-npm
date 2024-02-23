@@ -3,7 +3,7 @@ import * as kl from "kolorist";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { parseArgs } from "node:util";
-import { install, remove } from "./commands";
+import { init, install, remove } from "./commands";
 import { JsrPackage, JsrPackageNameError, prettyTime, setDebug } from "./utils";
 import { PkgManagerName } from "./pkg_manager";
 
@@ -34,6 +34,7 @@ Commands:
 ${prettyPrintRow([
   ["i, install, add", "Install one or more jsr packages"],
   ["r, uninstall, remove", "Remove one or more jsr packages"],
+  ["init", "Create an empty project"],
 ])}
 
 Options:
@@ -130,6 +131,8 @@ if (args.length === 0) {
       const packages = getPackages(options.positionals);
       await remove(packages, { pkgManagerName });
     });
+  } else if (cmd === "init") {
+    run(() => init(process.cwd()));
   } else {
     console.error(kl.red(`Unknown command: ${cmd}`));
     console.log();

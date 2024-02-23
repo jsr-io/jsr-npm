@@ -44,3 +44,58 @@ export async function remove(packages: JsrPackage[], options: BaseOptions) {
   const pkgManager = await getPkgManager(process.cwd(), options.pkgManagerName);
   await pkgManager.remove(packages);
 }
+
+async function createFiles(cwd: string, files: Record<string, string>) {
+  await Promise.all(
+    Array.from(Object.entries(files)).map(([file, content]) => {
+      const filePath = path.join(cwd, file);
+      return fs.promises.writeFile(filePath, content, "utf-8");
+    })
+  );
+}
+
+export async function init(cwd: string) {
+  await setupNpmRc(cwd);
+
+  await createFiles(cwd, {
+    "package.json": JSON.stringify(
+      {
+        name: "@<scope>/<package_name>",
+        version: "0.0.1",
+        description: "",
+        license: "ISC",
+        type: "module",
+      },
+      null,
+      2
+    ),
+    // TODO: Rename to jsr.json, once supported in Deno
+    // deno.json
+    "deno.json": JSON.stringify(
+      {
+        name: "@<scope>/<package_name>",
+        version: "0.0.1",
+        description: "",
+        exports: {
+          ".": "./mod.ts",
+        },
+      },
+      null,
+      2
+    ),
+    "mod.ts": [
+      "export function add(a: number, b: number): number {",
+      "  return a + b;",
+      "}",
+    ].join("\n"),
+    "tsconfig.json": JSON.stringify(
+      {
+        compilerOptions: {
+          moduleResolution: "NodeNext",
+        },
+      },
+      null,
+      2
+    ),
+  });
+}

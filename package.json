@@ -38,7 +38,6 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@std/encoding": "npm:@jsr/std__encoding@^0.216.0",
     "kolorist": "^1.8.0"
   }
 }

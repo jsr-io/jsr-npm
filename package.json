@@ -22,7 +22,15 @@
     "build": "rimraf dist dist-esm && tsc && tsc -p tsconfig.esm.json",
     "prepublishOnly": "tsc && npm test"
   },
-  "keywords": [],
+  "keywords": [
+    "install",
+    "modules",
+    "package manager",
+    "package.json",
+    "dependencies",
+    "npm"
+  ],
+  "homepage": "https://jsr.io",
   "author": "",
   "license": "MIT",
   "files": [

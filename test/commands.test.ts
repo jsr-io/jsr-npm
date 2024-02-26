@@ -252,3 +252,18 @@ describe("remove", () => {
     );
   });
 });
+
+describe("init", () => {
+  it("creates empty project", async () => {
+    await withTempEnv(["init"], async (_getPkgJson, dir) => {
+      const files = await fs.promises.readdir(dir);
+      assert.deepEqual(files.sort(), [
+        ".npmrc",
+        "deno.json",
+        "mod.ts",
+        "package.json",
+        "tsconfig.json",
+      ]);
+    });
+  });
+});

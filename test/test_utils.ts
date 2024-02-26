@@ -13,15 +13,23 @@ export interface PkgJson {
   optionalDependencies?: Record<string, string>;
 }
 
-export async function runJsr(args: string[], cwd: string) {
+export async function runJsr(
+  args: string[],
+  cwd: string,
+  env: Record<string, string> = {
+    ...process.env,
+    npm_config_user_agent: "npm/",
+  }
+) {
   const bin = path.join(__dirname, "..", "src", "bin.ts");
   const tsNode = path.join(__dirname, "..", "node_modules", ".bin", "ts-node");
-  return await exec(tsNode, [bin, ...args], cwd);
+  return await exec(tsNode, [bin, ...args], cwd, env);
 }
 
 export async function withTempEnv(
   args: string[],
-  fn: (getPkgJson: () => Promise<PkgJson>, dir: string) => Promise<void>
+  fn: (getPkgJson: () => Promise<PkgJson>, dir: string) => Promise<void>,
+  options: { env?: Record<string, string> } = {}
 ): Promise<void> {
   const dir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "jsr-cli"));
 
@@ -40,7 +48,7 @@ export async function withTempEnv(
   );
 
   try {
-    await runJsr(args, dir);
+    await runJsr(args, dir, options.env);
     const pkgJson = async () =>
       JSON.parse(
         await fs.promises.readFile(path.join(dir, "package.json"), "utf-8")

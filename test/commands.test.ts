@@ -135,6 +135,24 @@ describe("install", () => {
       }
     );
   });
+
+  it("detect pnpm from npm_config_user_agent", async () => {
+    await withTempEnv(
+      ["i", "@std/encoding@0.216.0"],
+      async (_, dir) => {
+        assert.ok(
+          await isFile(path.join(dir, "pnpm-lock.yaml")),
+          "pnpm lockfile not created"
+        );
+      },
+      {
+        env: {
+          ...process.env,
+          npm_config_user_agent: `pnpm/8.14.3 ${process.env.npm_config_user_agent}`,
+        },
+      }
+    );
+  });
 });
 
 describe("remove", () => {

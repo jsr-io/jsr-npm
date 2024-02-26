@@ -96,15 +96,26 @@ class Pnpm implements PackageManager {
 
 export type PkgManagerName = "npm" | "yarn" | "pnpm";
 
+function getPkgManagerFromEnv(value: string): PkgManagerName | null {
+  if (value.includes("pnpm/")) return "pnpm";
+  else if (value.includes("yarn/")) return "yarn";
+  else if (value.includes("npm/")) return "npm";
+  else return null;
+}
+
 export async function getPkgManager(
   cwd: string,
   pkgManagerName: PkgManagerName | null
 ) {
-  const { projectDir, pkgManagerName: foundPkgManager } = await findProjectDir(
+  const envPkgManager = process.env.npm_config_user_agent;
+  const fromEnv =
+    envPkgManager !== undefined ? getPkgManagerFromEnv(envPkgManager) : null;
+
+  const { projectDir, pkgManagerName: fromLockfile } = await findProjectDir(
     cwd
   );
 
-  const result = pkgManagerName || foundPkgManager || "npm";
+  const result = pkgManagerName || fromEnv || fromLockfile || "npm";
 
   if (result === "yarn") {
     return new Yarn(projectDir);

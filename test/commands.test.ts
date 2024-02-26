@@ -136,23 +136,25 @@ describe("install", () => {
     );
   });
 
-  it("jsr add --bun @std/encoding@0.216.0 - forces bun", async () => {
-    await withTempEnv(
-      ["i", "--bun", "@std/encoding@0.216.0"],
-      async (_, dir) => {
-        assert.ok(
-          await isFile(path.join(dir, "bun.lockb")),
-          "bun lockfile not created"
-        );
+  if (process.platform !== "win32") {
+    it("jsr add --bun @std/encoding@0.216.0 - forces bun", async () => {
+      await withTempEnv(
+        ["i", "--bun", "@std/encoding@0.216.0"],
+        async (_, dir) => {
+          assert.ok(
+            await isFile(path.join(dir, "bun.lockb")),
+            "bun lockfile not created"
+          );
 
-        const config = await fs.promises.readFile(
-          path.join(dir, "bunfig.toml"),
-          "utf-8"
-        );
-        assert.match(config, /"@jsr"\s+=/, "bunfig.toml not created");
-      }
-    );
-  });
+          const config = await fs.promises.readFile(
+            path.join(dir, "bunfig.toml"),
+            "utf-8"
+          );
+          assert.match(config, /"@jsr"\s+=/, "bunfig.toml not created");
+        }
+      );
+    });
+  }
 
   describe("env detection", () => {
     it("detect pnpm from npm_config_user_agent", async () => {
@@ -173,23 +175,25 @@ describe("install", () => {
       );
     });
 
-    it("detect bun from npm_config_user_agent", async () => {
-      await withTempEnv(
-        ["i", "@std/encoding@0.216.0"],
-        async (_, dir) => {
-          assert.ok(
-            await isFile(path.join(dir, "bun.lockb")),
-            "bun lockfile not created"
-          );
-        },
-        {
-          env: {
-            ...process.env,
-            npm_config_user_agent: `bun/1.0.29 ${process.env.npm_config_user_agent}`,
+    if (process.platform !== "win32") {
+      it("detect bun from npm_config_user_agent", async () => {
+        await withTempEnv(
+          ["i", "@std/encoding@0.216.0"],
+          async (_, dir) => {
+            assert.ok(
+              await isFile(path.join(dir, "bun.lockb")),
+              "bun lockfile not created"
+            );
           },
-        }
-      );
-    });
+          {
+            env: {
+              ...process.env,
+              npm_config_user_agent: `bun/1.0.29 ${process.env.npm_config_user_agent}`,
+            },
+          }
+        );
+      });
+    }
   });
 });
 

@@ -47,6 +47,7 @@ ${prettyPrintRow([
   ["--npm", "Use npm to remove and install packages."],
   ["--yarn", "Use yarn to remove and install packages."],
   ["--pnpm", "Use pnpm to remove and install packages."],
+  ["--bun", "Use bun to remove and install packages."],
   ["--verbose", "Show additional debugging information."],
   ["-h, --help", "Show this help text."],
   ["--version", "Print the version number."],
@@ -82,6 +83,7 @@ if (args.length === 0) {
       npm: { type: "boolean", default: false },
       yarn: { type: "boolean", default: false },
       pnpm: { type: "boolean", default: false },
+      bun: { type: "boolean", default: false },
       debug: { type: "boolean", default: false },
       help: { type: "boolean", default: false, short: "h" },
       version: { type: "boolean", default: false },
@@ -110,6 +112,8 @@ if (args.length === 0) {
     ? "pnpm"
     : options.values.yarn
     ? "yarn"
+    : options.values.bun
+    ? "bun"
     : null;
 
   const cmd = options.positionals[0];

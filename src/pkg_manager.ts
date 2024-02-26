@@ -94,12 +94,35 @@ class Pnpm implements PackageManager {
   }
 }
 
-export type PkgManagerName = "npm" | "yarn" | "pnpm";
+export class Bun implements PackageManager {
+  constructor(public cwd: string) {}
+
+  async install(packages: JsrPackage[], options: InstallOptions) {
+    const args = ["add"];
+    const mode = modeToFlag(options.mode);
+    if (mode !== "") {
+      args.push(mode);
+    }
+    args.push(...toPackageArgs(packages));
+    await execWithLog("bun", args, this.cwd);
+  }
+
+  async remove(packages: JsrPackage[]) {
+    await execWithLog(
+      "bun",
+      ["remove", ...packages.map((pkg) => pkg.toString())],
+      this.cwd
+    );
+  }
+}
+
+export type PkgManagerName = "npm" | "yarn" | "pnpm" | "bun";
 
 function getPkgManagerFromEnv(value: string): PkgManagerName | null {
-  if (value.includes("pnpm/")) return "pnpm";
-  else if (value.includes("yarn/")) return "yarn";
-  else if (value.includes("npm/")) return "npm";
+  if (value.startsWith("pnpm/")) return "pnpm";
+  else if (value.startsWith("yarn/")) return "yarn";
+  else if (value.startsWith("npm/")) return "npm";
+  else if (value.startsWith("bun/")) return "bun";
   else return null;
 }
 
@@ -121,6 +144,8 @@ export async function getPkgManager(
     return new Yarn(projectDir);
   } else if (result === "pnpm") {
     return new Pnpm(projectDir);
+  } else if (result === "bun") {
+    return new Bun(projectDir);
   }
 
   return new Npm(projectDir);

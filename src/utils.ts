@@ -105,6 +105,14 @@ export async function findProjectDir(
     return result;
   }
 
+  const bunLockfile = path.join(dir, "bun.lockb");
+  if (await fileExists(bunLockfile)) {
+    logDebug(`Detected bun from lockfile ${bunLockfile}`);
+    result.projectDir = dir;
+    result.pkgManagerName = "bun";
+    return result;
+  }
+
   const pkgJsonPath = path.join(dir, "package.json");
   if (await fileExists(pkgJsonPath)) {
     logDebug(`Found package.json at ${pkgJsonPath}`);

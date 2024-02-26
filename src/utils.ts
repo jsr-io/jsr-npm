@@ -141,8 +141,13 @@ export function prettyTime(diff: number) {
   return diff + "ms";
 }
 
-export async function exec(cmd: string, args: string[], cwd: string) {
-  const cp = spawn(cmd, args, { stdio: "inherit", cwd, shell: true });
+export async function exec(
+  cmd: string,
+  args: string[],
+  cwd: string,
+  env?: Record<string, string>
+) {
+  const cp = spawn(cmd, args, { stdio: "inherit", cwd, shell: true, env });
 
   return new Promise<void>((resolve) => {
     cp.on("exit", (code) => {

@@ -58,7 +58,7 @@ export class JsrPackage {
   }
 }
 
-async function fileExists(file: string): Promise<boolean> {
+export async function fileExists(file: string): Promise<boolean> {
   try {
     const stat = await fs.promises.stat(file);
     return stat.isFile();

@@ -157,15 +157,10 @@ if (args.length === 0) {
       await remove(packages, { pkgManagerName });
     });
   } else if (cmd === "publish") {
-    const binPath = path.join(
-      __dirname,
-      "..",
-      ".download",
-      process.platform === "win32" ? "deno.exe" : "deno"
-    );
+    const binFolder = path.join(__dirname, "..", ".download");
     run(() =>
       publish(process.cwd(), {
-        binPath,
+        binFolder,
         dryRun: options.values["dry-run"] ?? false,
         allowSlowTypes: options.values["allow-slow-types"] ?? false,
         token: options.values.token,

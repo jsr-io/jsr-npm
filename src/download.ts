@@ -1,20 +1,18 @@
-const os = require("node:os");
-const fs = require("node:fs");
-const path = require("node:path");
-const util = require("node:util");
-const stream = require("node:stream");
-const kl = require("kolorist");
-const StreamZip = require("node-stream-zip");
+import * as os from "node:os";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import * as util from "node:util";
+import * as stream from "node:stream";
+import * as kl from "kolorist";
+import * as StreamZip from "node-stream-zip";
 
 const streamFinished = util.promisify(stream.finished);
 
-const DENO_CANARY_INFO_URL =
-  "https://dl.deno.land/canary-latest.txt";
+const DENO_CANARY_INFO_URL = "https://dl.deno.land/canary-latest.txt";
 
 // Example: https://github.com/denoland/deno/releases/download/v1.41.0/deno-aarch64-apple-darwin.zip
 // Example: https://dl.deno.land/canary/d722de886b85093eeef08d1e9fd6f3193405762d/deno-aarch64-apple-darwin.zip
-/** @type {Record<string, string>} */
-const FILENAMES = {
+const FILENAMES: Record<string, string> = {
   "darwin arm64": "deno-aarch64-apple-darwin",
   "darwin x64": "deno-x86_64-apple-darwin",
   "linux arm64": "deno-aarch64-unknown-linux-gnu",
@@ -22,8 +20,10 @@ const FILENAMES = {
   "win32 x64": "deno-x86_64-pc-windows-msvc",
 };
 
-/** @returns {Promise<{url: string, filename: string}>} */
-async function getDenoDownloadUrl() {
+async function getDenoDownloadUrl(): Promise<{
+  url: string;
+  filename: string;
+}> {
   const key = `${process.platform} ${os.arch()}`;
   if (!(key in FILENAMES)) {
     throw new Error(`Unsupported platform: ${key}`);
@@ -47,11 +47,11 @@ async function getDenoDownloadUrl() {
   };
 }
 
-(async () => {
+export async function downloadDeno(binPath: string): Promise<void> {
   const info = await getDenoDownloadUrl();
+  const binFolder = path.dirname(binPath);
 
-  const targetPath = path.join(__dirname, "..", ".download");
-  await fs.promises.mkdir(targetPath, { recursive: true });
+  await fs.promises.mkdir(binFolder, { recursive: true });
 
   const res = await fetch(info.url);
   const contentLen = Number(res.headers.get("content-length") ?? Infinity);
@@ -63,38 +63,37 @@ async function getDenoDownloadUrl() {
 
   await withProgressBar(
     async (tick) => {
-      const tmpFile = path.join(targetPath, info.filename + ".part");
+      const tmpFile = path.join(binFolder, info.filename + ".part");
       const writable = fs.createWriteStream(tmpFile, "utf-8");
 
-      for await (const chunk of streamToAsyncIterable(res.body)) {
+      for await (const chunk of streamToAsyncIterable(res.body!)) {
         tick(chunk.length);
         writable.write(chunk);
       }
 
       writable.end();
       await streamFinished(writable);
-      const file = path.join(targetPath, info.filename);
+      const file = path.join(binFolder, info.filename);
       await fs.promises.rename(tmpFile, file);
 
       const zip = new StreamZip.async({ file });
-      await zip.extract(null, targetPath);
+      await zip.extract(null, binFolder);
       await zip.close();
 
-      const deno = path.join(
-        targetPath,
-        process.platform === "win32" ? "deno.exe" : "deno"
-      );
-      await fs.promises.chmod(deno, 493);
+      // Mark as executable
+      await fs.promises.chmod(binPath, 493);
 
       // Delete downloaded file
       await fs.promises.rm(file);
     },
     { max: contentLen }
   );
-})();
+}
 
-/** @type {<T>(fn: (tick: (n: number) => void) => Promise<T>, options: {max: number}) => Promise<T>} */
-async function withProgressBar(fn, options) {
+async function withProgressBar<T>(
+  fn: (tick: (n: number) => void) => Promise<T>,
+  options: { max: number }
+): Promise<T> {
   let current = 0;
   let start = Date.now();
   let passed = 0;
@@ -132,8 +131,7 @@ async function withProgressBar(fn, options) {
     }
   }, 16);
 
-  /** @type {(n: number) => void} */
-  const tick = (n) => {
+  const tick = (n: number) => {
     current += n;
     printStatus();
   };
@@ -146,8 +144,9 @@ async function withProgressBar(fn, options) {
   return res;
 }
 
-/** @type {<T>(stream: ReadableStream<T>) => AsyncIterable<T>} */
-async function* streamToAsyncIterable(stream) {
+async function* streamToAsyncIterable<T>(
+  stream: ReadableStream<T>
+): AsyncIterable<T> {
   const reader = stream.getReader();
   try {
     while (true) {
@@ -160,8 +159,7 @@ async function* streamToAsyncIterable(stream) {
   }
 }
 
-/** @type {(bytes: number, digists?: number) => string} */
-function humanFileSize(bytes, digits = 1) {
+function humanFileSize(bytes: number, digits = 1): string {
   const thresh = 1024;
 
   if (Math.abs(bytes) < thresh) {
@@ -183,9 +181,8 @@ function humanFileSize(bytes, digits = 1) {
   return `${bytes.toFixed(digits)} ${units[u]}`;
 }
 
-/** @type {(fn: () => void, delay: number) => () => void} */
-function throttle(fn, delay) {
-  let timer = null;
+function throttle(fn: () => void, delay: number): () => void {
+  let timer: NodeJS.Timeout | null = null;
 
   return () => {
     if (timer === null) {

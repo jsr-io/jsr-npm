@@ -1,8 +1,9 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
 import * as kl from "kolorist";
-import { JsrPackage, exec } from "./utils";
+import { JsrPackage, exec, fileExists } from "./utils";
 import { Bun, PkgManagerName, getPkgManager } from "./pkg_manager";
+import { downloadDeno } from "./download";
 
 const NPMRC_FILE = ".npmrc";
 const BUNFIG_FILE = "bunfig.toml";
@@ -94,13 +95,24 @@ export async function remove(packages: JsrPackage[], options: BaseOptions) {
 }
 
 export interface PublishOptions {
-  binPath: string;
+  binFolder: string;
   dryRun: boolean;
   allowSlowTypes: boolean;
   token: string | undefined;
 }
 
 export async function publish(cwd: string, options: PublishOptions) {
+  // Check if deno executable is available, download it if not.
+  const binPath = path.join(
+    options.binFolder,
+    process.platform === "win32" ? "deno.exe" : "deno"
+  );
+
+  if (!(await fileExists(binPath))) {
+    await downloadDeno(binPath);
+  }
+
+  // Ready to publish now!
   const args = [
     "publish",
     "--unstable-bare-node-builtins",
@@ -109,5 +121,5 @@ export async function publish(cwd: string, options: PublishOptions) {
   if (options.dryRun) args.push("--dry-run");
   if (options.allowSlowTypes) args.push("--allow-slow-types");
   if (options.token) args.push("--token", options.token);
-  await exec(options.binPath, args, cwd);
+  await exec(binPath, args, cwd);
 }

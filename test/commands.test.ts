@@ -294,5 +294,5 @@ describe("publish", () => {
 
       await runJsr(["publish", "--dry-run", "--token", "dummy-token"], dir);
     });
-  });
+  }).timeout(600000);
 });

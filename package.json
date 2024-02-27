@@ -37,7 +37,7 @@
   "files": [
     "dist/",
     "dist-esm/",
-    "dist-scripts/"
+    "scripts/"
   ],
   "devDependencies": {
     "@types/mocha": "^10.0.6",

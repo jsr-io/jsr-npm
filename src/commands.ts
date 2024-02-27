@@ -105,6 +105,7 @@ export async function publish(cwd: string, options: PublishOptions) {
   // Check if deno executable is available, download it if not.
   const binPath = path.join(
     options.binFolder,
+    process.platform,
     process.platform === "win32" ? "deno.exe" : "deno"
   );
 

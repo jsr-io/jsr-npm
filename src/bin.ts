@@ -49,17 +49,28 @@ ${prettyPrintRow([
   ["--yarn", "Use yarn to remove and install packages."],
   ["--pnpm", "Use pnpm to remove and install packages."],
   ["--bun", "Use bun to remove and install packages."],
-  [
-    "--dry-run",
-    "Prepare package, but don't publish when running 'jsr publish'.",
-  ],
   ["--verbose", "Show additional debugging information."],
   ["-h, --help", "Show this help text."],
   ["--version", "Print the version number."],
 ])}
 
+Publish Options:
+${prettyPrintRow([
+  [
+    "--token <Token>",
+    "The API token to use when publishing. If unset, interactive authentication is be used.",
+  ],
+  [
+    "--dry-run",
+    "Prepare the package for publishing performing all checks and validations without uploading.",
+  ],
+  ["--allow-slow-types", "Allow publishing with slow types."],
+])}
+
 Environment variables:
-  JSR_URL  Use a different registry url for the publish command
+${prettyPrintRow([
+  ["JSR_URL", "Use a different registry url for the publish command"],
+])}
 `);
 }
 
@@ -89,6 +100,8 @@ if (args.length === 0) {
       "save-dev": { type: "boolean", default: false, short: "D" },
       "save-optional": { type: "boolean", default: false, short: "O" },
       "dry-run": { type: "boolean", default: false },
+      "allow-slow-types": { type: "boolean", default: false },
+      token: { type: "string" },
       npm: { type: "boolean", default: false },
       yarn: { type: "boolean", default: false },
       pnpm: { type: "boolean", default: false },
@@ -144,8 +157,13 @@ if (args.length === 0) {
       await remove(packages, { pkgManagerName });
     });
   } else if (cmd === "publish") {
-    const dryRun = options.values["dry-run"] ?? false;
-    run(() => publish(process.cwd(), dryRun));
+    run(() =>
+      publish(process.cwd(), {
+        dryRun: options.values["dry-run"] ?? false,
+        allowSlowTypes: options.values["allow-slow-types"] ?? false,
+        token: options.values.token,
+      })
+    );
   } else {
     console.error(kl.red(`Unknown command: ${cmd}`));
     console.log();

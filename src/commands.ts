@@ -93,8 +93,20 @@ export async function remove(packages: JsrPackage[], options: BaseOptions) {
   await pkgManager.remove(packages);
 }
 
-export async function publish(cwd: string, dryRun: boolean) {
-  const args = ["publish"];
-  if (dryRun) args.push("--dry-run");
+export interface PublishOptions {
+  dryRun: boolean;
+  allowSlowTypes: boolean;
+  token: string | undefined;
+}
+
+export async function publish(cwd: string, options: PublishOptions) {
+  const args = [
+    "publish",
+    "--unstable-bare-node-builtins",
+    "--unstable-sloppy-imports",
+  ];
+  if (options.dryRun) args.push("--dry-run");
+  if (options.allowSlowTypes) args.push("--allow-slow-types");
+  if (options.token) args.push("--token", options.token);
   await exec("deno", args, cwd);
 }

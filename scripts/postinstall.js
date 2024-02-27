@@ -13,7 +13,8 @@ const DENO_CANARY_INFO_URL =
 
 // Example: https://github.com/denoland/deno/releases/download/v1.41.0/deno-aarch64-apple-darwin.zip
 // Example: https://dl.deno.land/canary/d722de886b85093eeef08d1e9fd6f3193405762d/deno-aarch64-apple-darwin.zip
-const FILENAMES: Record<string, string> = {
+/** @type {Record<string, string>} */
+const FILENAMES = {
   "darwin arm64": "deno-aarch64-apple-darwin",
   "darwin x64": "deno-x86_64-apple-darwin",
   "linux arm64": "deno-aarch64-unknown-linux-gnu",
@@ -21,10 +22,8 @@ const FILENAMES: Record<string, string> = {
   "win32 x64": "deno-x86_64-pc-windows-msvc",
 };
 
-async function getDenoDownloadUrl(): Promise<{
-  url: string;
-  filename: string;
-}> {
+/** @returns {Promise<{url: string, filename: string}>} */
+async function getDenoDownloadUrl() {
   const key = `${process.platform} ${os.arch()}`;
   if (!(key in FILENAMES)) {
     throw new Error(`Unsupported platform: ${key}`);
@@ -67,7 +66,7 @@ async function getDenoDownloadUrl(): Promise<{
       const tmpFile = path.join(targetPath, info.filename + ".part");
       const writable = fs.createWriteStream(tmpFile, "utf-8");
 
-      for await (const chunk of streamToAsyncIterable(res.body!)) {
+      for await (const chunk of streamToAsyncIterable(res.body)) {
         tick(chunk.length);
         writable.write(chunk);
       }
@@ -91,10 +90,8 @@ async function getDenoDownloadUrl(): Promise<{
   );
 })();
 
-async function withProgressBar<T>(
-  fn: (tick: (n: number) => void) => Promise<T>,
-  options: { max: number }
-): Promise<T> {
+/** @type {<T>(fn: (tick: (n: number) => void) => Promise<T>, options: {max: number}) => Promise<T>} */
+async function withProgressBar(fn, options) {
   let current = 0;
   let start = Date.now();
   let passed = 0;
@@ -132,7 +129,8 @@ async function withProgressBar<T>(
     }
   }, 16);
 
-  const tick = (n: number) => {
+  /** @type {(n: number) => void} */
+  const tick = (n) => {
     current += n;
     printStatus();
   };
@@ -145,7 +143,8 @@ async function withProgressBar<T>(
   return res;
 }
 
-async function* streamToAsyncIterable<T>(stream: ReadableStream<T>) {
+/** @type {<T>(stream: ReadableStream<T>) => AsyncIterable<T>} */
+async function* streamToAsyncIterable(stream) {
   const reader = stream.getReader();
   try {
     while (true) {
@@ -158,7 +157,8 @@ async function* streamToAsyncIterable<T>(stream: ReadableStream<T>) {
   }
 }
 
-function humanFileSize(bytes: number, digits = 1) {
+/** @type {(bytes: number, digists?: number) => string} */
+function humanFileSize(bytes, digits = 1) {
   const thresh = 1024;
 
   if (Math.abs(bytes) < thresh) {
@@ -180,8 +180,9 @@ function humanFileSize(bytes: number, digits = 1) {
   return `${bytes.toFixed(digits)} ${units[u]}`;
 }
 
-function throttle(fn: () => void, delay: number) {
-  let timer: NodeJS.Timeout | null = null;
+/** @type {(fn: () => void, delay: number) => () => void} */
+function throttle(fn, delay) {
+  let timer = null;
 
   return () => {
     if (timer === null) {

@@ -1,6 +1,16 @@
 import * as path from "path";
 import * as fs from "fs";
-import { isDirectory, isFile, runJsr, withTempEnv } from "./test_utils";
+import {
+  DenoJson,
+  PkgJson,
+  isDirectory,
+  isFile,
+  readJson,
+  runInTempDir,
+  runJsr,
+  withTempEnv,
+  writeJson,
+} from "./test_utils";
 import * as assert from "node:assert/strict";
 
 describe("install", () => {
@@ -251,4 +261,38 @@ describe("remove", () => {
       }
     );
   });
+});
+
+describe("publish", () => {
+  it("should publish a package", async () => {
+    await runInTempDir(async (dir) => {
+      const pkgJsonPath = path.join(dir, "package.json");
+      const pkgJson = await readJson<PkgJson>(pkgJsonPath);
+      pkgJson.exports = {
+        ".": "./mod.js",
+      };
+      await fs.promises.writeFile(
+        pkgJsonPath,
+        JSON.stringify(pkgJson),
+        "utf-8"
+      );
+
+      await fs.promises.writeFile(
+        path.join(dir, "mod.ts"),
+        "export const value = 42;",
+        "utf-8"
+      );
+
+      // TODO: Change this once deno supports jsr.json
+      await writeJson<DenoJson>(path.join(dir, "deno.json"), {
+        name: "@deno/jsr-cli-test",
+        version: pkgJson.version,
+        exports: {
+          ".": "./mod.ts",
+        },
+      });
+
+      await runJsr(["publish", "--dry-run", "--token", "dummy-token"], dir);
+    });
+  }).timeout(600000);
 });

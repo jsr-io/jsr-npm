@@ -58,7 +58,7 @@ export class JsrPackage {
   }
 }
 
-async function fileExists(file: string): Promise<boolean> {
+export async function fileExists(file: string): Promise<boolean> {
   try {
     const stat = await fs.promises.stat(file);
     return stat.isFile();
@@ -153,7 +153,7 @@ export async function exec(
   cmd: string,
   args: string[],
   cwd: string,
-  env?: Record<string, string>
+  env?: Record<string, string | undefined>
 ) {
   const cp = spawn(cmd, args, { stdio: "inherit", cwd, shell: true, env });
 

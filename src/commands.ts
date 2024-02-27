@@ -1,8 +1,9 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
 import * as kl from "kolorist";
-import { JsrPackage } from "./utils";
+import { JsrPackage, exec, fileExists } from "./utils";
 import { Bun, PkgManagerName, getPkgManager } from "./pkg_manager";
+import { downloadDeno, getDenoDownloadUrl } from "./download";
 
 const NPMRC_FILE = ".npmrc";
 const BUNFIG_FILE = "bunfig.toml";
@@ -91,4 +92,51 @@ export async function remove(packages: JsrPackage[], options: BaseOptions) {
   const pkgManager = await getPkgManager(process.cwd(), options.pkgManagerName);
   console.log(`Removing ${kl.cyan(packages.join(", "))}...`);
   await pkgManager.remove(packages);
+}
+
+export interface PublishOptions {
+  binFolder: string;
+  dryRun: boolean;
+  allowSlowTypes: boolean;
+  token: string | undefined;
+}
+
+export async function publish(cwd: string, options: PublishOptions) {
+  const info = await getDenoDownloadUrl();
+
+  const binPath = path.join(
+    options.binFolder,
+    info.version,
+    // Ensure each binary has their own folder to avoid overwriting it
+    // in case jsr gets added to a project as a dependency where
+    // developers use multiple OSes
+    process.platform,
+    process.platform === "win32" ? "deno.exe" : "deno"
+  );
+
+  // Check if deno executable is available, download it if not.
+  if (!(await fileExists(binPath))) {
+    // Clear folder first to get rid of old download artifacts
+    // to avoid taking up lots of disk space.
+    try {
+      await fs.promises.rm(options.binFolder, { recursive: true });
+    } catch (err) {
+      if (!(err instanceof Error) || (err as any).code !== "ENOENT") {
+        throw err;
+      }
+    }
+
+    await downloadDeno(binPath, info);
+  }
+
+  // Ready to publish now!
+  const args = [
+    "publish",
+    "--unstable-bare-node-builtins",
+    "--unstable-sloppy-imports",
+  ];
+  if (options.dryRun) args.push("--dry-run");
+  if (options.allowSlowTypes) args.push("--allow-slow-types");
+  if (options.token) args.push("--token", options.token);
+  await exec(binPath, args, cwd);
 }

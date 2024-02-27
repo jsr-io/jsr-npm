@@ -46,6 +46,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "kolorist": "^1.8.0"
+    "kolorist": "^1.8.0",
+    "node-stream-zip": "^1.15.0"
   }
 }

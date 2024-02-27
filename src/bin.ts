@@ -3,7 +3,7 @@ import * as kl from "kolorist";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { parseArgs } from "node:util";
-import { install, remove } from "./commands";
+import { install, publish, remove } from "./commands";
 import { JsrPackage, JsrPackageNameError, prettyTime, setDebug } from "./utils";
 import { PkgManagerName } from "./pkg_manager";
 
@@ -34,6 +34,7 @@ Commands:
 ${prettyPrintRow([
   ["i, install, add", "Install one or more jsr packages"],
   ["r, uninstall, remove", "Remove one or more jsr packages"],
+  ["publish", "Publish a package to the JSR registry."],
 ])}
 
 Options:
@@ -51,6 +52,24 @@ ${prettyPrintRow([
   ["--verbose", "Show additional debugging information."],
   ["-h, --help", "Show this help text."],
   ["--version", "Print the version number."],
+])}
+
+Publish Options:
+${prettyPrintRow([
+  [
+    "--token <Token>",
+    "The API token to use when publishing. If unset, interactive authentication is be used.",
+  ],
+  [
+    "--dry-run",
+    "Prepare the package for publishing performing all checks and validations without uploading.",
+  ],
+  ["--allow-slow-types", "Allow publishing with slow types."],
+])}
+
+Environment variables:
+${prettyPrintRow([
+  ["JSR_URL", "Use a different registry url for the publish command"],
 ])}
 `);
 }
@@ -80,6 +99,9 @@ if (args.length === 0) {
       "save-prod": { type: "boolean", default: true, short: "P" },
       "save-dev": { type: "boolean", default: false, short: "D" },
       "save-optional": { type: "boolean", default: false, short: "O" },
+      "dry-run": { type: "boolean", default: false },
+      "allow-slow-types": { type: "boolean", default: false },
+      token: { type: "string" },
       npm: { type: "boolean", default: false },
       yarn: { type: "boolean", default: false },
       pnpm: { type: "boolean", default: false },
@@ -134,6 +156,16 @@ if (args.length === 0) {
       const packages = getPackages(options.positionals);
       await remove(packages, { pkgManagerName });
     });
+  } else if (cmd === "publish") {
+    const binFolder = path.join(__dirname, "..", ".download");
+    run(() =>
+      publish(process.cwd(), {
+        binFolder,
+        dryRun: options.values["dry-run"] ?? false,
+        allowSlowTypes: options.values["allow-slow-types"] ?? false,
+        token: options.values.token,
+      })
+    );
   } else {
     console.error(kl.red(`Unknown command: ${cmd}`));
     console.log();

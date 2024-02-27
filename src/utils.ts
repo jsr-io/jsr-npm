@@ -155,7 +155,6 @@ export async function exec(
   cwd: string,
   env?: Record<string, string | undefined>
 ) {
-  console.log("spawn", cmd, args);
   const cp = spawn(cmd, args, { stdio: "inherit", cwd, shell: true, env });
 
   return new Promise<void>((resolve) => {

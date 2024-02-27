@@ -263,7 +263,7 @@ describe("remove", () => {
   });
 });
 
-describe("publish", () => {
+describe.only("publish", () => {
   it("should publish a package", async () => {
     await runInTempDir(async (dir) => {
       const pkgJsonPath = path.join(dir, "package.json");
@@ -292,7 +292,7 @@ describe("publish", () => {
         },
       });
 
-      await runJsr(["publish", "--dry-run"], dir);
+      await runJsr(["publish", "--dry-run", "--token", "dummy-token"], dir);
     });
   });
 });

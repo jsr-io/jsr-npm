@@ -94,6 +94,7 @@ export async function remove(packages: JsrPackage[], options: BaseOptions) {
 }
 
 export interface PublishOptions {
+  binPath: string;
   dryRun: boolean;
   allowSlowTypes: boolean;
   token: string | undefined;
@@ -108,5 +109,5 @@ export async function publish(cwd: string, options: PublishOptions) {
   if (options.dryRun) args.push("--dry-run");
   if (options.allowSlowTypes) args.push("--allow-slow-types");
   if (options.token) args.push("--token", options.token);
-  await exec("deno", args, cwd);
+  await exec(options.binPath, args, cwd);
 }

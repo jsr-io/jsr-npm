@@ -19,8 +19,9 @@
   "scripts": {
     "test": "mocha -r ts-node/register --extensions ts,tsx --timeout 30000 --watch-files src,test 'test/**/*.test.ts'",
     "cli": "ts-node src/bin.ts",
-    "build": "rimraf dist dist-esm && tsc && tsc -p tsconfig.esm.json",
-    "prepublishOnly": "tsc"
+    "build": "rimraf dist dist-esm dist-scripts && tsc && tsc -p tsconfig.esm.json && tsc -p tsconfig.scripts.json",
+    "prepublishOnly": "tsc",
+    "install": "node dist/postinstall.js"
   },
   "keywords": [
     "install",
@@ -35,7 +36,8 @@
   "license": "MIT",
   "files": [
     "dist/",
-    "dist-esm/"
+    "dist-esm/",
+    "dist-scripts/"
   ],
   "devDependencies": {
     "@types/mocha": "^10.0.6",
@@ -46,6 +48,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "kolorist": "^1.8.0"
+    "kolorist": "^1.8.0",
+    "node-stream-zip": "^1.15.0"
   }
 }

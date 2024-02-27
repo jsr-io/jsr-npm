@@ -6,5 +6,6 @@
     "strict": true,
     "outDir": "dist-esm/",
     "declaration": true
-  }
+  },
+  "include": ["src"]
 }

@@ -2,5 +2,8 @@
 node_modules/
 dist/
 dist-esm/
+dist-scripts/
+.download/
 *.log
 *.tgz
+package/

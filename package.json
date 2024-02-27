@@ -21,7 +21,7 @@
     "cli": "ts-node src/bin.ts",
     "build": "rimraf dist dist-esm dist-scripts && tsc && tsc -p tsconfig.esm.json && tsc -p tsconfig.scripts.json",
     "prepublishOnly": "tsc",
-    "install": "node dist/postinstall.js"
+    "install": "node dist-scripts/postinstall.js"
   },
   "keywords": [
     "install",

@@ -29,6 +29,7 @@ export async function runJsr(
 ) {
   const bin = path.join(__dirname, "..", "src", "bin.ts");
   const tsNode = path.join(__dirname, "..", "node_modules", ".bin", "ts-node");
+  console.log(bin, args);
   return await exec(tsNode, [bin, ...args], cwd, { ...process.env, ...env });
 }
 

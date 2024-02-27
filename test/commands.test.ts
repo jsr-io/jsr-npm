@@ -1,11 +1,15 @@
 import * as path from "path";
 import * as fs from "fs";
 import {
+  DenoJson,
+  PkgJson,
   isDirectory,
   isFile,
+  readJson,
   runInTempDir,
   runJsr,
   withTempEnv,
+  writeJson,
 } from "./test_utils";
 import * as assert from "node:assert/strict";
 
@@ -259,14 +263,11 @@ describe("remove", () => {
   });
 });
 
-// This is experimental and under heavy development on the deno side
-describe.skip("publish", () => {
+describe("publish", () => {
   it("should publish a package", async () => {
     await runInTempDir(async (dir) => {
       const pkgJsonPath = path.join(dir, "package.json");
-      const pkgJson = JSON.parse(
-        await fs.promises.readFile(pkgJsonPath, "utf-8")
-      );
+      const pkgJson = await readJson<PkgJson>(pkgJsonPath);
       pkgJson.exports = {
         ".": "./mod.js",
       };
@@ -277,10 +278,19 @@ describe.skip("publish", () => {
       );
 
       await fs.promises.writeFile(
-        path.join(dir, "mod.js"),
+        path.join(dir, "mod.ts"),
         "export const value = 42;",
         "utf-8"
       );
+
+      // TODO: Change this once deno supports jsr.json
+      await writeJson<DenoJson>(path.join(dir, "deno.json"), {
+        name: "@deno/jsr-cli-test",
+        version: pkgJson.version,
+        exports: {
+          ".": "./mod.ts",
+        },
+      });
 
       await runJsr(["publish", "--dry-run"], dir);
     });

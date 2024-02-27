@@ -11,6 +11,13 @@ export interface PkgJson {
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
   optionalDependencies?: Record<string, string>;
+  exports?: string | Record<string, string | Record<string, string>>;
+}
+
+export interface DenoJson {
+  name: string;
+  version: string;
+  exports: string | Record<string, string>;
 }
 
 export async function runJsr(
@@ -29,19 +36,11 @@ export async function runJsr(
 export async function runInTempDir(fn: (dir: string) => Promise<void>) {
   const dir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "jsr-cli"));
 
-  await fs.promises.writeFile(
-    path.join(dir, "package.json"),
-    JSON.stringify(
-      {
-        name: "jsr-test-package",
-        version: "0.0.1",
-        license: "MIT",
-      },
-      null,
-      2
-    ),
-    "utf-8"
-  );
+  await writeJson(path.join(dir, "package.json"), {
+    name: "jsr-test-package",
+    version: "0.0.1",
+    license: "MIT",
+  });
   try {
     await fn(dir);
   } finally {
@@ -57,9 +56,7 @@ export async function withTempEnv(
   await runInTempDir(async (dir) => {
     await runJsr(args, dir, options.env);
     const pkgJson = async () =>
-      JSON.parse(
-        await fs.promises.readFile(path.join(dir, "package.json"), "utf-8")
-      ) as PkgJson;
+      readJson<PkgJson>(path.join(dir, "package.json"));
     await fn(pkgJson, dir);
   });
 }
@@ -78,4 +75,13 @@ export async function isFile(path: string): Promise<boolean> {
   } catch (err) {
     return false;
   }
+}
+
+export async function readJson<T>(file: string): Promise<T> {
+  const content = await fs.promises.readFile(file, "utf-8");
+  return JSON.parse(content);
+}
+
+export async function writeJson<T>(file: string, data: T): Promise<void> {
+  await fs.promises.writeFile(file, JSON.stringify(data, null, 2), "utf-8");
 }

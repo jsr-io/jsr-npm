@@ -263,7 +263,7 @@ describe("remove", () => {
   });
 });
 
-describe.only("publish", () => {
+describe("publish", () => {
   it("should publish a package", async () => {
     await runInTempDir(async (dir) => {
       const pkgJsonPath = path.join(dir, "package.json");

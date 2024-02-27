@@ -102,13 +102,16 @@ export interface PublishOptions {
 }
 
 export async function publish(cwd: string, options: PublishOptions) {
-  // Check if deno executable is available, download it if not.
   const binPath = path.join(
     options.binFolder,
+    // Ensure each binary has their own folder to avoid overwriting it
+    // in case jsr gets added to a project as a dependency where
+    // developers use multiple OSes
     process.platform,
     process.platform === "win32" ? "deno.exe" : "deno"
   );
 
+  // Check if deno executable is available, download it if not.
   if (!(await fileExists(binPath))) {
     await downloadDeno(binPath);
   }

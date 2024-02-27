@@ -24,13 +24,12 @@ export async function runJsr(
   args: string[],
   cwd: string,
   env: Record<string, string> = {
-    ...process.env,
     npm_config_user_agent: "npm/",
   }
 ) {
   const bin = path.join(__dirname, "..", "src", "bin.ts");
   const tsNode = path.join(__dirname, "..", "node_modules", ".bin", "ts-node");
-  return await exec(tsNode, [bin, ...args], cwd, env);
+  return await exec(tsNode, [bin, ...args], cwd, { ...process.env, ...env });
 }
 
 export async function runInTempDir(fn: (dir: string) => Promise<void>) {

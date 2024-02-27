@@ -153,7 +153,7 @@ export async function exec(
   cmd: string,
   args: string[],
   cwd: string,
-  env?: Record<string, string>
+  env?: Record<string, string | undefined>
 ) {
   const cp = spawn(cmd, args, { stdio: "inherit", cwd, shell: true, env });
 

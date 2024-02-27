@@ -80,7 +80,10 @@ async function getDenoDownloadUrl() {
       await zip.extract(null, targetPath);
       await zip.close();
 
-      const deno = path.join(targetPath, "deno");
+      const deno = path.join(
+        targetPath,
+        process.platform === "win32" ? "deno.exe" : "deno"
+      );
       await fs.promises.chmod(deno, 493);
 
       // Delete downloaded file

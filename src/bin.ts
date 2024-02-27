@@ -34,7 +34,7 @@ Commands:
 ${prettyPrintRow([
   ["i, install, add", "Install one or more jsr packages"],
   ["r, uninstall, remove", "Remove one or more jsr packages"],
-  ["publish", "Publish a package to the JSR registry (experimental)"],
+  ["publish", "Publish a package to the JSR registry."],
 ])}
 
 Options:

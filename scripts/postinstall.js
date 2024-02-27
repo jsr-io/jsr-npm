@@ -9,7 +9,7 @@ const StreamZip = require("node-stream-zip");
 const streamFinished = util.promisify(stream.finished);
 
 const DENO_CANARY_INFO_URL =
-  "https://storage.googleapis.com/dl.deno.land/canary-latest.txt";
+  "https://dl.deno.land/canary-latest.txt";
 
 // Example: https://github.com/denoland/deno/releases/download/v1.41.0/deno-aarch64-apple-darwin.zip
 // Example: https://dl.deno.land/canary/d722de886b85093eeef08d1e9fd6f3193405762d/deno-aarch64-apple-darwin.zip

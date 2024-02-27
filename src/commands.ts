@@ -3,7 +3,7 @@ import * as fs from "node:fs";
 import * as kl from "kolorist";
 import { JsrPackage, exec, fileExists } from "./utils";
 import { Bun, PkgManagerName, getPkgManager } from "./pkg_manager";
-import { downloadDeno } from "./download";
+import { downloadDeno, getDenoDownloadUrl } from "./download";
 
 const NPMRC_FILE = ".npmrc";
 const BUNFIG_FILE = "bunfig.toml";
@@ -102,8 +102,11 @@ export interface PublishOptions {
 }
 
 export async function publish(cwd: string, options: PublishOptions) {
+  const info = await getDenoDownloadUrl();
+
   const binPath = path.join(
     options.binFolder,
+    info.version,
     // Ensure each binary has their own folder to avoid overwriting it
     // in case jsr gets added to a project as a dependency where
     // developers use multiple OSes
@@ -113,7 +116,17 @@ export async function publish(cwd: string, options: PublishOptions) {
 
   // Check if deno executable is available, download it if not.
   if (!(await fileExists(binPath))) {
-    await downloadDeno(binPath);
+    // Clear folder first to get rid of old download artifacts
+    // to avoid taking up lots of disk space.
+    try {
+      await fs.promises.rm(options.binFolder, { recursive: true });
+    } catch (err) {
+      if (!(err instanceof Error) || (err as any).code !== "ENOENT") {
+        throw err;
+      }
+    }
+
+    await downloadDeno(binPath, info);
   }
 
   // Ready to publish now!

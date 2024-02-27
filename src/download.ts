@@ -20,10 +20,13 @@ const FILENAMES: Record<string, string> = {
   "win32 x64": "deno-x86_64-pc-windows-msvc",
 };
 
-async function getDenoDownloadUrl(): Promise<{
+export interface DownloadInfo {
   url: string;
   filename: string;
-}> {
+  version: string;
+}
+
+export async function getDenoDownloadUrl(): Promise<DownloadInfo> {
   const key = `${process.platform} ${os.arch()}`;
   if (!(key in FILENAMES)) {
     throw new Error(`Unsupported platform: ${key}`);
@@ -44,11 +47,14 @@ async function getDenoDownloadUrl(): Promise<{
   return {
     url: `https://dl.deno.land/canary/${decodeURI(sha)}/${filename}`,
     filename,
+    version: sha,
   };
 }
 
-export async function downloadDeno(binPath: string): Promise<void> {
-  const info = await getDenoDownloadUrl();
+export async function downloadDeno(
+  binPath: string,
+  info: DownloadInfo
+): Promise<void> {
   const binFolder = path.dirname(binPath);
 
   await fs.promises.mkdir(binFolder, { recursive: true });

@@ -1,10 +1,10 @@
-import * as os from "node:os";
-import * as fs from "node:fs";
-import * as path from "node:path";
-import * as util from "node:util";
-import * as stream from "node:stream";
-import * as kl from "kolorist";
-import * as StreamZip from "node-stream-zip";
+const os = require("node:os");
+const fs = require("node:fs");
+const path = require("node:path");
+const util = require("node:util");
+const stream = require("node:stream");
+const kl = require("kolorist");
+const StreamZip = require("node-stream-zip");
 
 const streamFinished = util.promisify(stream.finished);
 

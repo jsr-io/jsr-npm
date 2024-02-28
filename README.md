@@ -38,7 +38,7 @@ This ensures that the package is fetched from JSR when you run npm install comma
 
 - `add`, `install`, `i`: Adds a JSR package to your project.
 - `remove`, `uninstall`, `r`: Remove a JSR package from your project.
-- `publish`: Support publishing `package.json` libraries to JSR.
+- `publish`: Publish `package.json` libraries to JSR.
 
 ## Limitations
 

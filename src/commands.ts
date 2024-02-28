@@ -2,8 +2,8 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
 import * as kl from "kolorist";
-import { JsrPackage, exec, fileExists } from "./utils";
-import { Bun, PkgManagerName, getPkgManager } from "./pkg_manager";
+import { exec, fileExists, JsrPackage } from "./utils";
+import { Bun, getPkgManager, PkgManagerName } from "./pkg_manager";
 import { downloadDeno, getDenoDownloadUrl } from "./download";
 
 const NPMRC_FILE = ".npmrc";
@@ -112,7 +112,7 @@ export async function publish(cwd: string, options: PublishOptions) {
     // in case jsr gets added to a project as a dependency where
     // developers use multiple OSes
     process.platform,
-    process.platform === "win32" ? "deno.exe" : "deno"
+    process.platform === "win32" ? "deno.exe" : "deno",
   );
 
   // Check if deno executable is available, download it if not.

@@ -2,9 +2,9 @@ import * as path from "path";
 import * as fs from "fs";
 import {
   DenoJson,
-  PkgJson,
   isDirectory,
   isFile,
+  PkgJson,
   readJson,
   runInTempDir,
   runJsr,
@@ -19,12 +19,12 @@ describe("install", () => {
       const pkgJson = await getPkgJson();
       assert.ok(
         pkgJson.dependencies && "@std/encoding" in pkgJson.dependencies,
-        "Missing dependency entry"
+        "Missing dependency entry",
       );
 
       assert.match(
         pkgJson.dependencies["@std/encoding"],
-        /^npm:@jsr\/std__encoding@\^\d+\.\d+\.\d+.*$/
+        /^npm:@jsr\/std__encoding@\^\d+\.\d+\.\d+.*$/,
       );
 
       const depPath = path.join(dir, "node_modules", "@std", "encoding");
@@ -34,7 +34,7 @@ describe("install", () => {
       const npmRc = await fs.promises.readFile(npmrcPath, "utf-8");
       assert.ok(
         npmRc.includes("@jsr:registry=https://npm.jsr.io"),
-        "Missing npmrc registry"
+        "Missing npmrc registry",
       );
     });
   });
@@ -74,7 +74,7 @@ describe("install", () => {
         assert.deepEqual(pkgJson.devDependencies, {
           "@std/encoding": "npm:@jsr/std__encoding@^0.216.0",
         });
-      }
+      },
     );
 
     await withTempEnv(
@@ -84,7 +84,7 @@ describe("install", () => {
         assert.deepEqual(pkgJson.devDependencies, {
           "@std/encoding": "npm:@jsr/std__encoding@^0.216.0",
         });
-      }
+      },
     );
   });
 
@@ -96,7 +96,7 @@ describe("install", () => {
         assert.deepEqual(pkgJson.optionalDependencies, {
           "@std/encoding": "npm:@jsr/std__encoding@^0.216.0",
         });
-      }
+      },
     );
 
     await withTempEnv(
@@ -106,7 +106,7 @@ describe("install", () => {
         assert.deepEqual(pkgJson.optionalDependencies, {
           "@std/encoding": "npm:@jsr/std__encoding@^0.216.0",
         });
-      }
+      },
     );
   });
 
@@ -116,9 +116,9 @@ describe("install", () => {
       async (_, dir) => {
         assert.ok(
           await isFile(path.join(dir, "package-lock.json")),
-          "npm lockfile not created"
+          "npm lockfile not created",
         );
-      }
+      },
     );
   });
 
@@ -128,9 +128,9 @@ describe("install", () => {
       async (_, dir) => {
         assert.ok(
           await isFile(path.join(dir, "yarn.lock")),
-          "yarn lockfile not created"
+          "yarn lockfile not created",
         );
-      }
+      },
     );
   });
 
@@ -140,9 +140,9 @@ describe("install", () => {
       async (_, dir) => {
         assert.ok(
           await isFile(path.join(dir, "pnpm-lock.yaml")),
-          "pnpm lockfile not created"
+          "pnpm lockfile not created",
         );
-      }
+      },
     );
   });
 
@@ -153,15 +153,15 @@ describe("install", () => {
         async (_, dir) => {
           assert.ok(
             await isFile(path.join(dir, "bun.lockb")),
-            "bun lockfile not created"
+            "bun lockfile not created",
           );
 
           const config = await fs.promises.readFile(
             path.join(dir, "bunfig.toml"),
-            "utf-8"
+            "utf-8",
           );
           assert.match(config, /"@jsr"\s+=/, "bunfig.toml not created");
-        }
+        },
       );
     });
   }
@@ -173,15 +173,16 @@ describe("install", () => {
         async (_, dir) => {
           assert.ok(
             await isFile(path.join(dir, "pnpm-lock.yaml")),
-            "pnpm lockfile not created"
+            "pnpm lockfile not created",
           );
         },
         {
           env: {
             ...process.env,
-            npm_config_user_agent: `pnpm/8.14.3 ${process.env.npm_config_user_agent}`,
+            npm_config_user_agent:
+              `pnpm/8.14.3 ${process.env.npm_config_user_agent}`,
           },
-        }
+        },
       );
     });
 
@@ -192,15 +193,16 @@ describe("install", () => {
           async (_, dir) => {
             assert.ok(
               await isFile(path.join(dir, "bun.lockb")),
-              "bun lockfile not created"
+              "bun lockfile not created",
             );
           },
           {
             env: {
               ...process.env,
-              npm_config_user_agent: `bun/1.0.29 ${process.env.npm_config_user_agent}`,
+              npm_config_user_agent:
+                `bun/1.0.29 ${process.env.npm_config_user_agent}`,
             },
-          }
+          },
         );
       });
     }
@@ -220,9 +222,9 @@ describe("remove", () => {
         const depPath = path.join(dir, "node_modules", "@std", "encoding");
         assert.ok(
           !(await isDirectory(depPath)),
-          "Folder in node_modules not removed"
+          "Folder in node_modules not removed",
         );
-      }
+      },
     );
   });
 
@@ -234,7 +236,7 @@ describe("remove", () => {
 
         const pkgJson = await getPkgJson();
         assert.equal(pkgJson.dependencies, undefined);
-      }
+      },
     );
   });
 
@@ -246,7 +248,7 @@ describe("remove", () => {
 
         const pkgJson = await getPkgJson();
         assert.equal(pkgJson.dependencies, undefined);
-      }
+      },
     );
   });
 
@@ -258,7 +260,7 @@ describe("remove", () => {
 
         const pkgJson = await getPkgJson();
         assert.equal(pkgJson.dependencies, undefined);
-      }
+      },
     );
   });
 });
@@ -274,13 +276,13 @@ describe("publish", () => {
       await fs.promises.writeFile(
         pkgJsonPath,
         JSON.stringify(pkgJson),
-        "utf-8"
+        "utf-8",
       );
 
       await fs.promises.writeFile(
         path.join(dir, "mod.ts"),
         "export const value = 42;",
-        "utf-8"
+        "utf-8",
       );
 
       // TODO: Change this once deno supports jsr.json

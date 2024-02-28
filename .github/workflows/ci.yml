@@ -7,6 +7,15 @@ on:
     branches: [main]
 
 jobs:
+  lint-and-format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: denoland/setup-deno@v1
+      - run: deno fmt --check
+      # TODO
+      # - run: deno lint
+
   test:
     strategy:
       matrix:

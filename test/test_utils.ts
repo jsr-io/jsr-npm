@@ -25,7 +25,7 @@ export async function runJsr(
   cwd: string,
   env: Record<string, string> = {
     npm_config_user_agent: "npm/",
-  }
+  },
 ) {
   const bin = path.join(__dirname, "..", "src", "bin.ts");
   const tsNode = path.join(__dirname, "..", "node_modules", ".bin", "ts-node");
@@ -50,7 +50,7 @@ export async function runInTempDir(fn: (dir: string) => Promise<void>) {
 export async function withTempEnv(
   args: string[],
   fn: (getPkgJson: () => Promise<PkgJson>, dir: string) => Promise<void>,
-  options: { env?: Record<string, string> } = {}
+  options: { env?: Record<string, string> } = {},
 ): Promise<void> {
   await runInTempDir(async (dir) => {
     await runJsr(args, dir, options.env);

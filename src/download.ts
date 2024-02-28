@@ -39,7 +39,7 @@ export async function getDenoDownloadUrl(): Promise<DownloadInfo> {
   if (!res.ok) {
     await res.body?.cancel();
     throw new Error(
-      `${res.status}: Unable to retrieve canary version information from ${DENO_CANARY_INFO_URL}.`
+      `${res.status}: Unable to retrieve canary version information from ${DENO_CANARY_INFO_URL}.`,
     );
   }
   const sha = (await res.text()).trim();
@@ -54,7 +54,7 @@ export async function getDenoDownloadUrl(): Promise<DownloadInfo> {
 
 export async function downloadDeno(
   binPath: string,
-  info: DownloadInfo
+  info: DownloadInfo,
 ): Promise<void> {
   const binFolder = path.dirname(binPath);
 
@@ -93,13 +93,13 @@ export async function downloadDeno(
       // Delete downloaded file
       await fs.promises.rm(file);
     },
-    { max: contentLen }
+    { max: contentLen },
   );
 }
 
 async function withProgressBar<T>(
   fn: (tick: (n: number) => void) => Promise<T>,
-  options: { max: number }
+  options: { max: number },
 ): Promise<T> {
   let current = 0;
   let start = Date.now();
@@ -123,7 +123,7 @@ async function withProgressBar<T>(
 
       const bar = "#".repeat((barLength / 100) * percent) + ">";
       const remaining = kl.blue(
-        "-".repeat(Math.max(barLength - bar.length, 0))
+        "-".repeat(Math.max(barLength - bar.length, 0)),
       );
       s += ` [${kl.cyan(bar)}${remaining}] `;
     }
@@ -152,7 +152,7 @@ async function withProgressBar<T>(
 }
 
 async function* streamToAsyncIterable<T>(
-  stream: ReadableStream<T>
+  stream: ReadableStream<T>,
 ): AsyncIterable<T> {
   const reader = stream.getReader();
   try {

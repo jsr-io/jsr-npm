@@ -26,52 +26,62 @@ function printHelp() {
   console.log(`jsr.io cli for node
 
 Usage:
-${prettyPrintRow([
-  ["jsr add @std/log", 'Install the "@std/log" package from jsr.io'],
-  ["jsr remove @std/log", 'Remove the "@std/log" package from the project'],
-])}
+${
+    prettyPrintRow([
+      ["jsr add @std/log", 'Install the "@std/log" package from jsr.io'],
+      ["jsr remove @std/log", 'Remove the "@std/log" package from the project'],
+    ])
+  }
 
 Commands:
-${prettyPrintRow([
-  ["i, install, add", "Install one or more jsr packages"],
-  ["r, uninstall, remove", "Remove one or more jsr packages"],
-  ["publish", "Publish a package to the JSR registry."],
-])}
+${
+    prettyPrintRow([
+      ["i, install, add", "Install one or more jsr packages"],
+      ["r, uninstall, remove", "Remove one or more jsr packages"],
+      ["publish", "Publish a package to the JSR registry."],
+    ])
+  }
 
 Options:
-${prettyPrintRow([
-  [
-    "-P, --save-prod",
-    "Package will be added to dependencies. This is the default.",
-  ],
-  ["-D, --save-dev", "Package will be added to devDependencies."],
-  ["-O, --save-optional", "Package will be added to optionalDependencies."],
-  ["--npm", "Use npm to remove and install packages."],
-  ["--yarn", "Use yarn to remove and install packages."],
-  ["--pnpm", "Use pnpm to remove and install packages."],
-  ["--bun", "Use bun to remove and install packages."],
-  ["--verbose", "Show additional debugging information."],
-  ["-h, --help", "Show this help text."],
-  ["--version", "Print the version number."],
-])}
+${
+    prettyPrintRow([
+      [
+        "-P, --save-prod",
+        "Package will be added to dependencies. This is the default.",
+      ],
+      ["-D, --save-dev", "Package will be added to devDependencies."],
+      ["-O, --save-optional", "Package will be added to optionalDependencies."],
+      ["--npm", "Use npm to remove and install packages."],
+      ["--yarn", "Use yarn to remove and install packages."],
+      ["--pnpm", "Use pnpm to remove and install packages."],
+      ["--bun", "Use bun to remove and install packages."],
+      ["--verbose", "Show additional debugging information."],
+      ["-h, --help", "Show this help text."],
+      ["--version", "Print the version number."],
+    ])
+  }
 
 Publish Options:
-${prettyPrintRow([
-  [
-    "--token <Token>",
-    "The API token to use when publishing. If unset, interactive authentication is be used.",
-  ],
-  [
-    "--dry-run",
-    "Prepare the package for publishing performing all checks and validations without uploading.",
-  ],
-  ["--allow-slow-types", "Allow publishing with slow types."],
-])}
+${
+    prettyPrintRow([
+      [
+        "--token <Token>",
+        "The API token to use when publishing. If unset, interactive authentication is be used.",
+      ],
+      [
+        "--dry-run",
+        "Prepare the package for publishing performing all checks and validations without uploading.",
+      ],
+      ["--allow-slow-types", "Allow publishing with slow types."],
+    ])
+  }
 
 Environment variables:
-${prettyPrintRow([
-  ["JSR_URL", "Use a different registry url for the publish command"],
-])}
+${
+    prettyPrintRow([
+      ["JSR_URL", "Use a different registry url for the publish command"],
+    ])
+  }
 `);
 }
 
@@ -122,7 +132,7 @@ if (args.length === 0) {
     process.exit(0);
   } else if (options.values.version) {
     const version = JSON.parse(
-      fs.readFileSync(path.join(__dirname, "..", "package.json"), "utf-8")
+      fs.readFileSync(path.join(__dirname, "..", "package.json"), "utf-8"),
     ).version as string;
     console.log(version);
     process.exit(0);

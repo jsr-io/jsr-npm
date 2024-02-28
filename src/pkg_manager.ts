@@ -1,6 +1,6 @@
 // Copyright 2024 the JSR authors. MIT license.
 import { InstallOptions } from "./commands";
-import { JsrPackage, exec, findProjectDir } from "./utils";
+import { exec, findProjectDir, JsrPackage } from "./utils";
 import * as kl from "kolorist";
 
 async function execWithLog(cmd: string, args: string[], cwd: string) {
@@ -18,7 +18,7 @@ function modeToFlag(mode: InstallOptions["mode"]): string {
 
 function toPackageArgs(pkgs: JsrPackage[]): string[] {
   return pkgs.map(
-    (pkg) => `@${pkg.scope}/${pkg.name}@npm:${pkg.toNpmPackage()}`
+    (pkg) => `@${pkg.scope}/${pkg.name}@npm:${pkg.toNpmPackage()}`,
   );
 }
 
@@ -46,7 +46,7 @@ class Npm implements PackageManager {
     await execWithLog(
       "npm",
       ["remove", ...packages.map((pkg) => pkg.toString())],
-      this.cwd
+      this.cwd,
     );
   }
 }
@@ -68,7 +68,7 @@ class Yarn implements PackageManager {
     await execWithLog(
       "yarn",
       ["remove", ...packages.map((pkg) => pkg.toString())],
-      this.cwd
+      this.cwd,
     );
   }
 }
@@ -90,7 +90,7 @@ class Pnpm implements PackageManager {
     await execWithLog(
       "yarn",
       ["remove", ...packages.map((pkg) => pkg.toString())],
-      this.cwd
+      this.cwd,
     );
   }
 }
@@ -112,7 +112,7 @@ export class Bun implements PackageManager {
     await execWithLog(
       "bun",
       ["remove", ...packages.map((pkg) => pkg.toString())],
-      this.cwd
+      this.cwd,
     );
   }
 }
@@ -129,14 +129,15 @@ function getPkgManagerFromEnv(value: string): PkgManagerName | null {
 
 export async function getPkgManager(
   cwd: string,
-  pkgManagerName: PkgManagerName | null
+  pkgManagerName: PkgManagerName | null,
 ) {
   const envPkgManager = process.env.npm_config_user_agent;
-  const fromEnv =
-    envPkgManager !== undefined ? getPkgManagerFromEnv(envPkgManager) : null;
+  const fromEnv = envPkgManager !== undefined
+    ? getPkgManagerFromEnv(envPkgManager)
+    : null;
 
   const { projectDir, pkgManagerName: fromLockfile } = await findProjectDir(
-    cwd
+    cwd,
   );
 
   const result = pkgManagerName || fromEnv || fromLockfile || "npm";

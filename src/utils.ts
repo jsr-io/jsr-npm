@@ -38,14 +38,14 @@ export class JsrPackage {
     }
 
     throw new JsrPackageNameError(
-      `Invalid jsr package name: A jsr package name must have the format @<scope>/<name>, but got "${input}"`
+      `Invalid jsr package name: A jsr package name must have the format @<scope>/<name>, but got "${input}"`,
     );
   }
 
   private constructor(
     public scope: string,
     public name: string,
-    public version: string | null
+    public version: string | null,
   ) {}
 
   toNpmPackage(): string {
@@ -80,7 +80,7 @@ export async function findProjectDir(
     projectDir: cwd,
     pkgManagerName: null,
     pkgJsonPath: null,
-  }
+  },
 ): Promise<ProjectInfo> {
   const npmLockfile = path.join(dir, "package-lock.json");
   if (await fileExists(npmLockfile)) {
@@ -154,7 +154,7 @@ export async function exec(
   cmd: string,
   args: string[],
   cwd: string,
-  env?: Record<string, string | undefined>
+  env?: Record<string, string | undefined>,
 ) {
   const cp = spawn(cmd, args, { stdio: "inherit", cwd, shell: true, env });
 

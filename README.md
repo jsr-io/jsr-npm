@@ -1,6 +1,8 @@
 # JSR npm command line tool
 
-The JSR npm CLI integrates JSR (JavaScript Registry) packages with npm-based projects, facilitating the use of JSR packages in environments that traditionally rely on npm. Learn more about JSR at [jsr.io](https://jsr.io).
+The JSR npm CLI integrates JSR (JavaScript Registry) packages with npm-based
+projects, facilitating the use of JSR packages in environments that
+traditionally rely on npm. Learn more about JSR at [jsr.io](https://jsr.io).
 
 ## Quick Start
 
@@ -10,7 +12,8 @@ Add a JSR package to your project:
 npx jsr add @package/name  # 'install' and 'i' are also supported
 ```
 
-This command auto-updates your `package.json` and installs the package, automatically detecting and using your project's package manager.
+This command auto-updates your `package.json` and installs the package,
+automatically detecting and using your project's package manager.
 
 ## How It Works
 
@@ -20,9 +23,11 @@ The CLI creates or updates a `.npmrc` file in your project with:
 @jsr:registry=https://npm.jsr.io
 ```
 
-This line redirects npm to fetch JSR packages from the JSR registry instead of the default npm registry.
+This line redirects npm to fetch JSR packages from the JSR registry instead of
+the default npm registry.
 
-Packages are added to `package.json` with an alias, mapping the JSR package name to the npm registry URL hosted by JSR, like so:
+Packages are added to `package.json` with an alias, mapping the JSR package name
+to the npm registry URL hosted by JSR, like so:
 
 ```json
 {
@@ -32,7 +37,8 @@ Packages are added to `package.json` with an alias, mapping the JSR package name
 }
 ```
 
-This ensures that the package is fetched from JSR when you run npm install commands.
+This ensures that the package is fetched from JSR when you run npm install
+commands.
 
 ## Commands
 
@@ -43,14 +49,18 @@ This ensures that the package is fetched from JSR when you run npm install comma
 ## Limitations
 
 - `jsr:` import specifiers are not supported.
-- Due to transpilation, the developer experience in editors might differ from native JSR usage.
+- Due to transpilation, the developer experience in editors might differ from
+  native JSR usage.
 
-For the best developer experience and to fully leverage JSR's capabilities, consider environments with native JSR support like Deno.
+For the best developer experience and to fully leverage JSR's capabilities,
+consider environments with native JSR support like Deno.
 
 ## Contributing
 
-We welcome contributions and feedback. Visit our GitHub repository to contribute or report issues.
+We welcome contributions and feedback. Visit our GitHub repository to contribute
+or report issues.
 
 ## License
 
-This CLI is available under the [MIT License](https://opensource.org/licenses/MIT).
+This CLI is available under the
+[MIT License](https://opensource.org/licenses/MIT).

@@ -1,3 +1,4 @@
+// Copyright 2024 the JSR authors. MIT license.
 import { InstallOptions } from "./commands";
 import { JsrPackage, exec, findProjectDir } from "./utils";
 import * as kl from "kolorist";

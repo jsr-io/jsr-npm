@@ -1,3 +1,4 @@
+// Copyright 2024 the JSR authors. MIT license.
 #!/usr/bin/env node
 import * as kl from "kolorist";
 import * as fs from "node:fs";

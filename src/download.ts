@@ -1,3 +1,4 @@
+// Copyright 2024 the JSR authors. MIT license.
 import * as os from "node:os";
 import * as fs from "node:fs";
 import * as path from "node:path";

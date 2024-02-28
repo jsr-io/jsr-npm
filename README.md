@@ -45,6 +45,8 @@ commands.
 - `add`, `install`, `i`: Adds a JSR package to your project.
 - `remove`, `uninstall`, `r`: Remove a JSR package from your project.
 - `publish`: Publish `package.json` libraries to JSR.
+- `run <script>`: Run a JSR package script.
+- `<script>`: Run a JSR package script without `run` command.
 
 ## Limitations
 

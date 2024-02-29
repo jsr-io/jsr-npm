@@ -28,7 +28,7 @@ export async function setupNpmRc(dir: string) {
   const msg = `Setting up ${NPMRC_FILE}`;
   try {
     let content = await fs.promises.readFile(npmRcPath, "utf-8");
-    if (!content.includes(JSR_NPMRC)) {
+    if (!content.includes("@jsr:registry=")) {
       content += JSR_NPMRC;
       await wrapWithStatus(msg, async () => {
         await fs.promises.writeFile(npmRcPath, content);

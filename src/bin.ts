@@ -82,7 +82,7 @@ ${
 Environment variables:
 ${
     prettyPrintRow([
-      ["JSR_URL", "Use a different registry url for the publish command."],
+      ["JSR_URL", "Use a different registry URL for the publish command."],
     ])
   }
 `);

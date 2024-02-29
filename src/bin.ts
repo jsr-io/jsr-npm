@@ -57,7 +57,7 @@ ${
       ["--bun", "Use bun to remove and install packages."],
       ["--verbose", "Show additional debugging information."],
       ["-h, --help", "Show this help text."],
-      ["--version", "Print the version number."],
+      ["-v, --version", "Print the version number."],
     ])
   }
 
@@ -119,7 +119,7 @@ if (args.length === 0) {
       bun: { type: "boolean", default: false },
       debug: { type: "boolean", default: false },
       help: { type: "boolean", default: false, short: "h" },
-      version: { type: "boolean", default: false },
+      version: { type: "boolean", default: false, short: "v" },
     },
   });
 

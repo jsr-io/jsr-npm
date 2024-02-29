@@ -298,26 +298,29 @@ describe("publish", () => {
     });
   }).timeout(600000);
 
-  it("use deno binary from DENO_BIN_PATH when set", async () => {
-    await runInTempDir(async (dir) => {
-      await fs.promises.writeFile(
-        path.join(dir, "mod.ts"),
-        "export const value = 42;",
-        "utf-8",
-      );
+  // Windows doesn't support #!/usr/bin/env
+  if (process.platform !== "win32") {
+    it("use deno binary from DENO_BIN_PATH when set", async () => {
+      await runInTempDir(async (dir) => {
+        await fs.promises.writeFile(
+          path.join(dir, "mod.ts"),
+          "export const value = 42;",
+          "utf-8",
+        );
 
-      // TODO: Change this once deno supports jsr.json
-      await writeJson<DenoJson>(path.join(dir, "deno.json"), {
-        name: "@deno/jsr-cli-test",
-        version: "1.0.0",
-        exports: {
-          ".": "./mod.ts",
-        },
-      });
+        // TODO: Change this once deno supports jsr.json
+        await writeJson<DenoJson>(path.join(dir, "deno.json"), {
+          name: "@deno/jsr-cli-test",
+          version: "1.0.0",
+          exports: {
+            ".": "./mod.ts",
+          },
+        });
 
-      await runJsr(["publish", "--dry-run", "--non-existant-option"], dir, {
-        DENO_BIN_PATH: path.join(__dirname, "fixtures", "dummy.js"),
+        await runJsr(["publish", "--dry-run", "--non-existant-option"], dir, {
+          DENO_BIN_PATH: path.join(__dirname, "fixtures", "dummy.js"),
+        });
       });
     });
-  });
+  }
 });

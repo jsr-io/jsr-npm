@@ -29,7 +29,10 @@ Usage:
 ${
     prettyPrintRow([
       ["jsr add @std/log", 'Install the "@std/log" package from jsr.io.'],
-      ["jsr remove @std/log", 'Remove the "@std/log" package from the project.'],
+      [
+        "jsr remove @std/log",
+        'Remove the "@std/log" package from the project.',
+      ],
     ])
   }
 

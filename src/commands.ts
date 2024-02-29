@@ -97,9 +97,7 @@ export async function remove(packages: JsrPackage[], options: BaseOptions) {
 
 export interface PublishOptions {
   binFolder: string;
-  dryRun: boolean;
-  allowSlowTypes: boolean;
-  token: string | undefined;
+  publishArgs: string[];
 }
 
 export async function publish(cwd: string, options: PublishOptions) {
@@ -135,9 +133,8 @@ export async function publish(cwd: string, options: PublishOptions) {
     "publish",
     "--unstable-bare-node-builtins",
     "--unstable-sloppy-imports",
+    "--no-check",
+    ...options.publishArgs,
   ];
-  if (options.dryRun) args.push("--dry-run");
-  if (options.allowSlowTypes) args.push("--allow-slow-types");
-  if (options.token) args.push("--token", options.token);
   await exec(binPath, args, cwd);
 }

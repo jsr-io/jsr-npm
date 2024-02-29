@@ -71,11 +71,20 @@ ${
         "--token <Token>",
         "The API token to use when publishing. If unset, interactive authentication will be used.",
       ],
+      ["-c, --config <FILE>", "Specify the configuration file."],
+      ["-q, --quiet", "Suppress diagnostic output."],
+      ["--no-config", "Disable automatic loading of the configuration file."],
       [
         "--dry-run",
         "Prepare the package for publishing performing all checks and validations without uploading.",
       ],
       ["--allow-slow-types", "Allow publishing with slow types."],
+      [
+        "--provenance",
+        "From CI/CD system, publicly links the package to where it was built and published from.",
+      ],
+      ["--check[=<CHECK_TYPE>]", "Type-check modules."],
+      ["--no-check[=<NO_CHECK_TYPE>]", "Skip type-checking modules."],
     ])
   }
 
@@ -106,85 +115,98 @@ if (args.length === 0) {
   printHelp();
   process.exit(0);
 } else {
-  const options = parseArgs({
-    args,
-    allowPositionals: true,
-    options: {
-      "save-prod": { type: "boolean", default: true, short: "P" },
-      "save-dev": { type: "boolean", default: false, short: "D" },
-      "save-optional": { type: "boolean", default: false, short: "O" },
-      "dry-run": { type: "boolean", default: false },
-      "allow-slow-types": { type: "boolean", default: false },
-      token: { type: "string" },
-      npm: { type: "boolean", default: false },
-      yarn: { type: "boolean", default: false },
-      pnpm: { type: "boolean", default: false },
-      bun: { type: "boolean", default: false },
-      debug: { type: "boolean", default: false },
-      help: { type: "boolean", default: false, short: "h" },
-      version: { type: "boolean", default: false, short: "v" },
-    },
-  });
-
-  if (options.values.debug || process.env.DEBUG) {
-    setDebug(true);
-  }
-
-  if (options.values.help) {
-    printHelp();
-    process.exit(0);
-  } else if (options.values.version) {
-    const version = JSON.parse(
-      fs.readFileSync(path.join(__dirname, "..", "package.json"), "utf-8"),
-    ).version as string;
-    console.log(version);
-    process.exit(0);
-  } else if (options.positionals.length === 0) {
-    printHelp();
-    process.exit(0);
-  }
-
-  const pkgManagerName: PkgManagerName | null = options.values.pnpm
-    ? "pnpm"
-    : options.values.yarn
-    ? "yarn"
-    : options.values.bun
-    ? "bun"
-    : null;
-
-  const cmd = options.positionals[0];
-  if (cmd === "i" || cmd === "install" || cmd === "add") {
-    run(async () => {
-      const packages = getPackages(options.positionals);
-      await install(packages, {
-        mode: options.values["save-dev"]
-          ? "dev"
-          : options.values["save-optional"]
-          ? "optional"
-          : "prod",
-        pkgManagerName,
-      });
-    });
-  } else if (cmd === "r" || cmd === "uninstall" || cmd === "remove") {
-    run(async () => {
-      const packages = getPackages(options.positionals);
-      await remove(packages, { pkgManagerName });
-    });
-  } else if (cmd === "publish") {
+  const cmd = args[0];
+  // Bypass cli argument validation for publish command. The underlying
+  // `deno publish` cli is under active development and args may change
+  // frequently.
+  if (
+    cmd === "publish" &&
+    !args.some((arg) =>
+      arg === "-h" || arg === "--help" || arg === "--version" || arg === "-v"
+    )
+  ) {
     const binFolder = path.join(__dirname, "..", ".download");
     run(() =>
       publish(process.cwd(), {
         binFolder,
-        dryRun: options.values["dry-run"] ?? false,
-        allowSlowTypes: options.values["allow-slow-types"] ?? false,
-        token: options.values.token,
+        publishArgs: args.slice(1),
       })
     );
   } else {
-    console.error(kl.red(`Unknown command: ${cmd}`));
-    console.log();
-    printHelp();
-    process.exit(1);
+    const options = parseArgs({
+      args,
+      allowPositionals: true,
+      options: {
+        "save-prod": { type: "boolean", default: true, short: "P" },
+        "save-dev": { type: "boolean", default: false, short: "D" },
+        "save-optional": { type: "boolean", default: false, short: "O" },
+        "dry-run": { type: "boolean", default: false },
+        "allow-slow-types": { type: "boolean", default: false },
+        token: { type: "string" },
+        config: { type: "string", short: "c" },
+        "no-config": { type: "boolean" },
+        check: { type: "string" },
+        "no-check": { type: "string" },
+        quiet: { type: "boolean", short: "q" },
+        npm: { type: "boolean", default: false },
+        yarn: { type: "boolean", default: false },
+        pnpm: { type: "boolean", default: false },
+        bun: { type: "boolean", default: false },
+        debug: { type: "boolean", default: false },
+        help: { type: "boolean", default: false, short: "h" },
+        version: { type: "boolean", default: false, short: "-v" },
+      },
+    });
+
+    if (options.values.debug || process.env.DEBUG) {
+      setDebug(true);
+    }
+
+    if (options.values.help) {
+      printHelp();
+      process.exit(0);
+    } else if (options.values.version) {
+      const version = JSON.parse(
+        fs.readFileSync(path.join(__dirname, "..", "package.json"), "utf-8"),
+      ).version as string;
+      console.log(version);
+      process.exit(0);
+    } else if (options.positionals.length === 0) {
+      printHelp();
+      process.exit(0);
+    }
+
+    const pkgManagerName: PkgManagerName | null = options.values.pnpm
+      ? "pnpm"
+      : options.values.yarn
+      ? "yarn"
+      : options.values.bun
+      ? "bun"
+      : null;
+
+    if (cmd === "i" || cmd === "install" || cmd === "add") {
+      run(async () => {
+        const packages = getPackages(options.positionals);
+        await install(packages, {
+          mode: options.values["save-dev"]
+            ? "dev"
+            : options.values["save-optional"]
+            ? "optional"
+            : "prod",
+          pkgManagerName,
+        });
+      });
+    } else if (cmd === "r" || cmd === "uninstall" || cmd === "remove") {
+      run(async () => {
+        const packages = getPackages(options.positionals);
+        await remove(packages, { pkgManagerName });
+      });
+    } else {
+      console.error(kl.red(`Unknown command: ${cmd}`));
+      console.log();
+      printHelp();
+      process.exit(1);
+    }
   }
 }
 

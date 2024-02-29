@@ -100,11 +100,11 @@ export interface PublishOptions {
   publishArgs: string[];
 }
 
-export async function publish(cwd: string, options: PublishOptions) {
+async function getOrDownloadBinPath(binFolder: string) {
   const info = await getDenoDownloadUrl();
 
   const binPath = path.join(
-    options.binFolder,
+    binFolder,
     info.version,
     // Ensure each binary has their own folder to avoid overwriting it
     // in case jsr gets added to a project as a dependency where
@@ -118,7 +118,7 @@ export async function publish(cwd: string, options: PublishOptions) {
     // Clear folder first to get rid of old download artifacts
     // to avoid taking up lots of disk space.
     try {
-      await fs.promises.rm(options.binFolder, { recursive: true });
+      await fs.promises.rm(binFolder, { recursive: true });
     } catch (err) {
       if (!(err instanceof Error) || (err as any).code !== "ENOENT") {
         throw err;
@@ -127,6 +127,13 @@ export async function publish(cwd: string, options: PublishOptions) {
 
     await downloadDeno(binPath, info);
   }
+
+  return binPath;
+}
+
+export async function publish(cwd: string, options: PublishOptions) {
+  const binPath = process.env.DENO_BIN_PATH ??
+    await getOrDownloadBinPath(options.binFolder);
 
   // Ready to publish now!
   const args = [

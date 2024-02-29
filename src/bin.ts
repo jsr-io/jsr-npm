@@ -71,9 +71,6 @@ ${
         "--token <Token>",
         "The API token to use when publishing. If unset, interactive authentication will be used.",
       ],
-      ["-c, --config <FILE>", "Specify the configuration file."],
-      ["-q, --quiet", "Suppress diagnostic output."],
-      ["--no-config", "Disable automatic loading of the configuration file."],
       [
         "--dry-run",
         "Prepare the package for publishing performing all checks and validations without uploading.",
@@ -83,8 +80,6 @@ ${
         "--provenance",
         "From CI/CD system, publicly links the package to where it was built and published from.",
       ],
-      ["--check[=<CHECK_TYPE>]", "Type-check modules."],
-      ["--no-check[=<NO_CHECK_TYPE>]", "Skip type-checking modules."],
     ])
   }
 
@@ -92,6 +87,10 @@ Environment variables:
 ${
     prettyPrintRow([
       ["JSR_URL", "Use a different registry URL for the publish command."],
+      [
+        "DENO_BIN_PATH",
+        "Use specified Deno binary instead of local downloaded one.",
+      ],
     ])
   }
 `);
@@ -154,7 +153,7 @@ if (args.length === 0) {
         bun: { type: "boolean", default: false },
         debug: { type: "boolean", default: false },
         help: { type: "boolean", default: false, short: "h" },
-        version: { type: "boolean", default: false, short: "-v" },
+        version: { type: "boolean", default: false, short: "v" },
       },
     });
 

@@ -28,16 +28,19 @@ function printHelp() {
 Usage:
 ${
     prettyPrintRow([
-      ["jsr add @std/log", 'Install the "@std/log" package from jsr.io'],
-      ["jsr remove @std/log", 'Remove the "@std/log" package from the project'],
+      ["jsr add @std/log", 'Install the "@std/log" package from jsr.io.'],
+      [
+        "jsr remove @std/log",
+        'Remove the "@std/log" package from the project.',
+      ],
     ])
   }
 
 Commands:
 ${
     prettyPrintRow([
-      ["i, install, add", "Install one or more jsr packages"],
-      ["r, uninstall, remove", "Remove one or more jsr packages"],
+      ["i, install, add", "Install one or more JSR packages."],
+      ["r, uninstall, remove", "Remove one or more JSR packages."],
       ["publish", "Publish a package to the JSR registry."],
     ])
   }
@@ -66,7 +69,7 @@ ${
     prettyPrintRow([
       [
         "--token <Token>",
-        "The API token to use when publishing. If unset, interactive authentication is be used.",
+        "The API token to use when publishing. If unset, interactive authentication will be used.",
       ],
       [
         "--dry-run",
@@ -79,7 +82,7 @@ ${
 Environment variables:
 ${
     prettyPrintRow([
-      ["JSR_URL", "Use a different registry url for the publish command"],
+      ["JSR_URL", "Use a different registry URL for the publish command."],
     ])
   }
 `);

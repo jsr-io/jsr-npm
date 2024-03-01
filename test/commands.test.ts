@@ -324,3 +324,39 @@ describe("publish", () => {
     });
   }
 });
+
+describe("run", () => {
+  it("should run a script", async () => {
+    await runInTempDir(async (dir) => {
+      const pkgJsonPath = path.join(dir, "package.json");
+      const pkgJson = await readJson<PkgJson>(pkgJsonPath);
+      pkgJson.scripts = {
+        test: 'echo "test"',
+      };
+      await fs.promises.writeFile(
+        pkgJsonPath,
+        JSON.stringify(pkgJson),
+        "utf-8",
+      );
+
+      await runJsr(["run", "test"], dir);
+    });
+  });
+
+  it("should run a script without the run command", async () => {
+    await runInTempDir(async (dir) => {
+      const pkgJsonPath = path.join(dir, "package.json");
+      const pkgJson = await readJson<PkgJson>(pkgJsonPath);
+      pkgJson.scripts = {
+        test: 'echo "test"',
+      };
+      await fs.promises.writeFile(
+        pkgJsonPath,
+        JSON.stringify(pkgJson),
+        "utf-8",
+      );
+
+      await runJsr(["test"], dir);
+    });
+  });
+});

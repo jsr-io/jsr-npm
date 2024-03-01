@@ -4,7 +4,7 @@ import * as kl from "kolorist";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { parseArgs } from "node:util";
-import { install, publish, remove } from "./commands";
+import { install, publish, remove, runScript } from "./commands";
 import { JsrPackage, JsrPackageNameError, prettyTime, setDebug } from "./utils";
 import { PkgManagerName } from "./pkg_manager";
 
@@ -39,6 +39,8 @@ ${
 Commands:
 ${
     prettyPrintRow([
+      ["<script>", "Run a script from the package.json file"],
+      ["run <script>", "Run a script from the package.json file"],
       ["i, install, add", "Install one or more JSR packages."],
       ["r, uninstall, remove", "Remove one or more JSR packages."],
       ["publish", "Publish a package to the JSR registry."],
@@ -120,8 +122,9 @@ if (args.length === 0) {
   // frequently.
   if (
     cmd === "publish" &&
-    !args.some((arg) =>
-      arg === "-h" || arg === "--help" || arg === "--version" || arg === "-v"
+    !args.some(
+      (arg) =>
+        arg === "-h" || arg === "--help" || arg === "--version" || arg === "-v",
     )
   ) {
     const binFolder = path.join(__dirname, "..", ".download");
@@ -200,11 +203,34 @@ if (args.length === 0) {
         const packages = getPackages(options.positionals);
         await remove(packages, { pkgManagerName });
       });
+    } else if (cmd === "run") {
+      const script = options.positionals[1];
+      if (!script) {
+        console.error(kl.red(`Missing script argument.`));
+        console.log();
+        printHelp();
+        process.exit(1);
+      }
+      run(async () => {
+        await runScript(process.cwd(), script, { pkgManagerName });
+      });
     } else {
-      console.error(kl.red(`Unknown command: ${cmd}`));
-      console.log();
-      printHelp();
-      process.exit(1);
+      const packageJsonPath = path.join(process.cwd(), "package.json");
+      if (fs.existsSync(packageJsonPath)) {
+        const packageJson = JSON.parse(
+          fs.readFileSync(packageJsonPath, "utf-8"),
+        );
+        if (packageJson.scripts && packageJson.scripts[cmd]) {
+          run(async () => {
+            await runScript(process.cwd(), cmd, { pkgManagerName });
+          });
+        } else {
+          console.error(kl.red(`Unknown command: ${cmd}`));
+          console.log();
+          printHelp();
+          process.exit(1);
+        }
+      }
     }
   }
 }

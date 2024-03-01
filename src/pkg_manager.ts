@@ -26,6 +26,7 @@ export interface PackageManager {
   cwd: string;
   install(packages: JsrPackage[], options: InstallOptions): Promise<void>;
   remove(packages: JsrPackage[]): Promise<void>;
+  runScript(script: string): Promise<void>;
 }
 
 class Npm implements PackageManager {
@@ -49,6 +50,10 @@ class Npm implements PackageManager {
       this.cwd,
     );
   }
+
+  async runScript(script: string) {
+    await execWithLog("npm", ["run", script], this.cwd);
+  }
 }
 
 class Yarn implements PackageManager {
@@ -70,6 +75,10 @@ class Yarn implements PackageManager {
       ["remove", ...packages.map((pkg) => pkg.toString())],
       this.cwd,
     );
+  }
+
+  async runScript(script: string) {
+    await execWithLog("yarn", [script], this.cwd);
   }
 }
 
@@ -93,6 +102,10 @@ class Pnpm implements PackageManager {
       this.cwd,
     );
   }
+
+  async runScript(script: string) {
+    await execWithLog("pnpm", [script], this.cwd);
+  }
 }
 
 export class Bun implements PackageManager {
@@ -114,6 +127,10 @@ export class Bun implements PackageManager {
       ["remove", ...packages.map((pkg) => pkg.toString())],
       this.cwd,
     );
+  }
+
+  async runScript(script: string) {
+    await execWithLog("bun", ["run", script], this.cwd);
   }
 }
 

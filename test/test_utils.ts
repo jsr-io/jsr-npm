@@ -12,6 +12,7 @@ export interface PkgJson {
   devDependencies?: Record<string, string>;
   optionalDependencies?: Record<string, string>;
   exports?: string | Record<string, string | Record<string, string>>;
+  scripts?: Record<string, string>;
 }
 
 export interface DenoJson {

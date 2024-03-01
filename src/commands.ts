@@ -145,3 +145,12 @@ export async function publish(cwd: string, options: PublishOptions) {
   ];
   await exec(binPath, args, cwd);
 }
+
+export async function runScript(
+  cwd: string,
+  script: string,
+  options: BaseOptions,
+) {
+  const pkgManager = await getPkgManager(process.cwd(), options.pkgManagerName);
+  await pkgManager.runScript(script);
+}

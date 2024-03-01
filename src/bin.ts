@@ -28,8 +28,11 @@ function printHelp() {
 Usage:
 ${
     prettyPrintRow([
-      ["jsr add @std/log", 'Install the "@std/log" package from jsr.io'],
-      ["jsr remove @std/log", 'Remove the "@std/log" package from the project'],
+      ["jsr add @std/log", 'Install the "@std/log" package from jsr.io.'],
+      [
+        "jsr remove @std/log",
+        'Remove the "@std/log" package from the project.',
+      ],
     ])
   }
 
@@ -38,8 +41,8 @@ ${
     prettyPrintRow([
       ["<script>", "Run a script from the package.json file"],
       ["run <script>", "Run a script from the package.json file"],
-      ["i, install, add", "Install one or more jsr packages"],
-      ["r, uninstall, remove", "Remove one or more jsr packages"],
+      ["i, install, add", "Install one or more JSR packages."],
+      ["r, uninstall, remove", "Remove one or more JSR packages."],
       ["publish", "Publish a package to the JSR registry."],
     ])
   }
@@ -59,7 +62,7 @@ ${
       ["--bun", "Use bun to remove and install packages."],
       ["--verbose", "Show additional debugging information."],
       ["-h, --help", "Show this help text."],
-      ["--version", "Print the version number."],
+      ["-v, --version", "Print the version number."],
     ])
   }
 
@@ -68,20 +71,28 @@ ${
     prettyPrintRow([
       [
         "--token <Token>",
-        "The API token to use when publishing. If unset, interactive authentication is be used.",
+        "The API token to use when publishing. If unset, interactive authentication will be used.",
       ],
       [
         "--dry-run",
         "Prepare the package for publishing performing all checks and validations without uploading.",
       ],
       ["--allow-slow-types", "Allow publishing with slow types."],
+      [
+        "--provenance",
+        "From CI/CD system, publicly links the package to where it was built and published from.",
+      ],
     ])
   }
 
 Environment variables:
 ${
     prettyPrintRow([
-      ["JSR_URL", "Use a different registry url for the publish command"],
+      ["JSR_URL", "Use a different registry URL for the publish command."],
+      [
+        "DENO_BIN_PATH",
+        "Use specified Deno binary instead of local downloaded one.",
+      ],
     ])
   }
 `);
@@ -105,104 +116,120 @@ if (args.length === 0) {
   printHelp();
   process.exit(0);
 } else {
-  const options = parseArgs({
-    args,
-    allowPositionals: true,
-    options: {
-      "save-prod": { type: "boolean", default: true, short: "P" },
-      "save-dev": { type: "boolean", default: false, short: "D" },
-      "save-optional": { type: "boolean", default: false, short: "O" },
-      "dry-run": { type: "boolean", default: false },
-      "allow-slow-types": { type: "boolean", default: false },
-      token: { type: "string" },
-      npm: { type: "boolean", default: false },
-      yarn: { type: "boolean", default: false },
-      pnpm: { type: "boolean", default: false },
-      bun: { type: "boolean", default: false },
-      debug: { type: "boolean", default: false },
-      help: { type: "boolean", default: false, short: "h" },
-      version: { type: "boolean", default: false },
-    },
-  });
-
-  if (options.values.debug || process.env.DEBUG) {
-    setDebug(true);
-  }
-
-  if (options.values.help) {
-    printHelp();
-    process.exit(0);
-  } else if (options.values.version) {
-    const version = JSON.parse(
-      fs.readFileSync(path.join(__dirname, "..", "package.json"), "utf-8"),
-    ).version as string;
-    console.log(version);
-    process.exit(0);
-  } else if (options.positionals.length === 0) {
-    printHelp();
-    process.exit(0);
-  }
-
-  const pkgManagerName: PkgManagerName | null = options.values.pnpm
-    ? "pnpm"
-    : options.values.yarn
-    ? "yarn"
-    : options.values.bun
-    ? "bun"
-    : null;
-
-  const cmd = options.positionals[0];
-  if (cmd === "i" || cmd === "install" || cmd === "add") {
-    run(async () => {
-      const packages = getPackages(options.positionals);
-      await install(packages, {
-        mode: options.values["save-dev"]
-          ? "dev"
-          : options.values["save-optional"]
-          ? "optional"
-          : "prod",
-        pkgManagerName,
-      });
-    });
-  } else if (cmd === "r" || cmd === "uninstall" || cmd === "remove") {
-    run(async () => {
-      const packages = getPackages(options.positionals);
-      await remove(packages, { pkgManagerName });
-    });
-  } else if (cmd === "publish") {
+  const cmd = args[0];
+  // Bypass cli argument validation for publish command. The underlying
+  // `deno publish` cli is under active development and args may change
+  // frequently.
+  if (
+    cmd === "publish" &&
+    !args.some(
+      (arg) =>
+        arg === "-h" || arg === "--help" || arg === "--version" || arg === "-v",
+    )
+  ) {
     const binFolder = path.join(__dirname, "..", ".download");
     run(() =>
       publish(process.cwd(), {
         binFolder,
-        dryRun: options.values["dry-run"] ?? false,
-        allowSlowTypes: options.values["allow-slow-types"] ?? false,
-        token: options.values.token,
+        publishArgs: args.slice(1),
       })
     );
-  } else if (cmd === "run") {
-    const script = options.positionals[1];
-    if (!script) {
-      console.error(kl.red(`Missing script argument.`));
-      console.log();
-      printHelp();
-      process.exit(1);
-    }
-    run(async () => {
-      await runScript(process.cwd(), script, { pkgManagerName });
-    });
   } else {
-    const packageJsonPath = path.join(process.cwd(), "package.json");
-    if (fs.existsSync(packageJsonPath)) {
-      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
-      if (packageJson.scripts && packageJson.scripts[cmd]) {
-        run(async () => {
-          await runScript(process.cwd(), cmd, { pkgManagerName });
+    const options = parseArgs({
+      args,
+      allowPositionals: true,
+      options: {
+        "save-prod": { type: "boolean", default: true, short: "P" },
+        "save-dev": { type: "boolean", default: false, short: "D" },
+        "save-optional": { type: "boolean", default: false, short: "O" },
+        "dry-run": { type: "boolean", default: false },
+        "allow-slow-types": { type: "boolean", default: false },
+        token: { type: "string" },
+        config: { type: "string", short: "c" },
+        "no-config": { type: "boolean" },
+        check: { type: "string" },
+        "no-check": { type: "string" },
+        quiet: { type: "boolean", short: "q" },
+        npm: { type: "boolean", default: false },
+        yarn: { type: "boolean", default: false },
+        pnpm: { type: "boolean", default: false },
+        bun: { type: "boolean", default: false },
+        debug: { type: "boolean", default: false },
+        help: { type: "boolean", default: false, short: "h" },
+        version: { type: "boolean", default: false, short: "v" },
+      },
+    });
+
+    if (options.values.debug || process.env.DEBUG) {
+      setDebug(true);
+    }
+
+    if (options.values.help) {
+      printHelp();
+      process.exit(0);
+    } else if (options.values.version) {
+      const version = JSON.parse(
+        fs.readFileSync(path.join(__dirname, "..", "package.json"), "utf-8"),
+      ).version as string;
+      console.log(version);
+      process.exit(0);
+    } else if (options.positionals.length === 0) {
+      printHelp();
+      process.exit(0);
+    }
+
+    const pkgManagerName: PkgManagerName | null = options.values.pnpm
+      ? "pnpm"
+      : options.values.yarn
+      ? "yarn"
+      : options.values.bun
+      ? "bun"
+      : null;
+
+    if (cmd === "i" || cmd === "install" || cmd === "add") {
+      run(async () => {
+        const packages = getPackages(options.positionals);
+        await install(packages, {
+          mode: options.values["save-dev"]
+            ? "dev"
+            : options.values["save-optional"]
+            ? "optional"
+            : "prod",
+          pkgManagerName,
         });
-      } else {
-        console.error(kl.red(`Unknown command: ${cmd}`));
+      });
+    } else if (cmd === "r" || cmd === "uninstall" || cmd === "remove") {
+      run(async () => {
+        const packages = getPackages(options.positionals);
+        await remove(packages, { pkgManagerName });
+      });
+    } else if (cmd === "run") {
+      const script = options.positionals[1];
+      if (!script) {
+        console.error(kl.red(`Missing script argument.`));
         console.log();
         printHelp();
         process.exit(1);
+      }
+      run(async () => {
+        await runScript(process.cwd(), script, { pkgManagerName });
+      });
+    } else {
+      const packageJsonPath = path.join(process.cwd(), "package.json");
+      if (fs.existsSync(packageJsonPath)) {
+        const packageJson = JSON.parse(
+          fs.readFileSync(packageJsonPath, "utf-8"),
+        );
+        if (packageJson.scripts && packageJson.scripts[cmd]) {
+          run(async () => {
+            await runScript(process.cwd(), cmd, { pkgManagerName });
+          });
+        } else {
+          console.error(kl.red(`Unknown command: ${cmd}`));
+          console.log();
+          printHelp();
+          process.exit(1);
+        }
       }
     }
   }

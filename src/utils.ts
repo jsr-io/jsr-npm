@@ -117,7 +117,6 @@ export async function findProjectDir(
     return result;
   }
 
-
   const pkgJsonPath = path.join(dir, "package.json");
   if (await fileExists(pkgJsonPath)) {
     logDebug(`Found package.json at ${pkgJsonPath}`);

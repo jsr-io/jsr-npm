@@ -90,6 +90,17 @@ export async function findProjectDir(
     return result;
   }
 
+  // prefer bun.lockb over yarn.lock
+  // In some cases, both bun.lockb and yarn.lock can exist in the same project.
+  // https://bun.sh/docs/install/lockfile
+  const bunLockfile = path.join(dir, "bun.lockb");
+  if (await fileExists(bunLockfile)) {
+    logDebug(`Detected bun from lockfile ${bunLockfile}`);
+    result.projectDir = dir;
+    result.pkgManagerName = "bun";
+    return result;
+  }
+
   const yarnLockFile = path.join(dir, "yarn.lock");
   if (await fileExists(yarnLockFile)) {
     logDebug(`Detected yarn from lockfile ${yarnLockFile}`);
@@ -106,13 +117,6 @@ export async function findProjectDir(
     return result;
   }
 
-  const bunLockfile = path.join(dir, "bun.lockb");
-  if (await fileExists(bunLockfile)) {
-    logDebug(`Detected bun from lockfile ${bunLockfile}`);
-    result.projectDir = dir;
-    result.pkgManagerName = "bun";
-    return result;
-  }
 
   const pkgJsonPath = path.join(dir, "package.json");
   if (await fileExists(pkgJsonPath)) {

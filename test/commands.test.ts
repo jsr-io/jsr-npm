@@ -107,6 +107,22 @@ describe("install", () => {
         },
       },
     );
+
+    if (process.platform !== "win32") {
+      await withTempEnv(
+        ["i", "--bun", "--save-dev", "@std/encoding@0.216.0"],
+        async (getPkgJson, dir) => {
+          assert.ok(
+            await isFile(path.join(dir, "bun.lockb")),
+            "bun lockfile not created",
+          );
+          const pkgJson = await getPkgJson();
+          assert.deepEqual(pkgJson.devDependencies, {
+            "@std/encoding": "npm:@jsr/std__encoding@0.216.0",
+          });
+        }
+      );
+    }
   });
 
   it("jsr add -O @std/encoding@0.216.0 - dev dependency", async () => {
@@ -149,6 +165,22 @@ describe("install", () => {
         },
       },
     );
+
+    if (process.platform !== "win32") {
+      await withTempEnv(
+        ["i", "--bun", "--save-optional", "@std/encoding@0.216.0"],
+        async (getPkgJson, dir) => {
+          assert.ok(
+            await isFile(path.join(dir, "bun.lockb")),
+            "bun lockfile not created",
+          );
+          const pkgJson = await getPkgJson();
+          assert.deepEqual(pkgJson.optionalDependencies, {
+            "@std/encoding": "npm:@jsr/std__encoding@0.216.0",
+          });
+        }
+      );
+    }
   });
 
   it("jsr add --npm @std/encoding@0.216.0 - forces npm", async () => {

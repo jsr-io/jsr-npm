@@ -88,25 +88,21 @@ describe("install", () => {
       },
     );
 
-    await withTempEnv(
-      ["i", "--save-dev", "@std/encoding@0.216.0"],
-      async (getPkgJson, dir) => {
-        assert.ok(
-          await isFile(path.join(dir, ".yarnrc.yml")),
-          "yarnrc file not created",
-        );
-        const pkgJson = await getPkgJson();
-        assert.deepEqual(pkgJson.devDependencies, {
-          "@std/encoding": "npm:@jsr/std__encoding@0.216.0",
-        });
-      },
-      {
-        prepare: async (dir) => {
-          await enableYarnBerry(dir);
-          await fs.promises.writeFile(path.join(dir, "yarn.lock"), "");
-        },
-      },
-    );
+    await runInTempDir(async (dir) => {
+      await enableYarnBerry(dir);
+      await fs.promises.writeFile(path.join(dir, "yarn.lock"), "");
+
+      await runJsr(["i", "--save-dev", "@std/encoding@0.216.0"], dir);
+
+      assert.ok(
+        await isFile(path.join(dir, ".yarnrc.yml")),
+        "yarnrc file not created",
+      );
+      const pkgJson = await readJson<PkgJson>(path.join(dir, "package.json"));
+      assert.deepEqual(pkgJson.devDependencies, {
+        "@std/encoding": "npm:@jsr/std__encoding@0.216.0",
+      });
+    })
 
     if (process.platform !== "win32") {
       await withTempEnv(
@@ -146,25 +142,21 @@ describe("install", () => {
       },
     );
 
-    await withTempEnv(
-      ["i", "--save-optional", "@std/encoding@0.216.0"],
-      async (getPkgJson, dir) => {
-        assert.ok(
-          await isFile(path.join(dir, ".yarnrc.yml")),
-          "yarnrc file not created",
-        );
-        const pkgJson = await getPkgJson();
-        assert.deepEqual(pkgJson.optionalDependencies, {
-          "@std/encoding": "npm:@jsr/std__encoding@0.216.0",
-        });
-      },
-      {
-        prepare: async (dir) => {
-          await enableYarnBerry(dir);
-          await fs.promises.writeFile(path.join(dir, "yarn.lock"), "");
-        },
-      },
-    );
+    await runInTempDir(async (dir) => {
+      await enableYarnBerry(dir);
+      await fs.promises.writeFile(path.join(dir, "yarn.lock"), "");
+
+      await runJsr(["i", "--save-optional", "@std/encoding@0.216.0"], dir);
+
+      assert.ok(
+        await isFile(path.join(dir, ".yarnrc.yml")),
+        "yarnrc file not created",
+      );
+      const pkgJson = await readJson<PkgJson>(path.join(dir, "package.json"));
+      assert.deepEqual(pkgJson.optionalDependencies, {
+        "@std/encoding": "npm:@jsr/std__encoding@0.216.0",
+      });
+    })
 
     if (process.platform !== "win32") {
       await withTempEnv(
@@ -208,20 +200,19 @@ describe("install", () => {
   });
 
   it("jsr add --yarn @std/encoding@0.216.0 - forces yarn berry", async () => {
-    await withTempEnv(
-      ["i", "--yarn", "@std/encoding@0.216.0"],
-      async (_, dir) => {
-        assert.ok(
-          await isFile(path.join(dir, "yarn.lock")),
-          "yarn lockfile not created",
-        );
-        assert.ok(
-          await isFile(path.join(dir, ".yarnrc.yml")),
-          "yarnrc file not created",
-        );
-      },
-      { prepare: enableYarnBerry },
-    );
+    await runInTempDir(async (dir) => {
+      await enableYarnBerry(dir);
+      await runJsr(["i", "--yarn", "@std/encoding@0.216.0"], dir);
+
+      assert.ok(
+        await isFile(path.join(dir, "yarn.lock")),
+        "yarn lockfile not created",
+      );
+      assert.ok(
+        await isFile(path.join(dir, ".yarnrc.yml")),
+        "yarnrc file not created",
+      );
+    })
   });
 
   it("jsr add --pnpm @std/encoding@0.216.0 - forces pnpm", async () => {

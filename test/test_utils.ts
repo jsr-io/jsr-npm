@@ -61,13 +61,9 @@ export async function runInTempDir(fn: (dir: string) => Promise<void>) {
 export async function withTempEnv(
   args: string[],
   fn: (getPkgJson: () => Promise<PkgJson>, dir: string) => Promise<void>,
-  options: {
-    env?: Record<string, string>;
-    prepare?: (dir: string) => Promise<void> | void;
-  } = {},
+  options: { env?: Record<string, string> } = {},
 ): Promise<void> {
   await runInTempDir(async (dir) => {
-    await options.prepare?.(dir);
     await runJsr(args, dir, options.env);
     const pkgJson = async () =>
       readJson<PkgJson>(path.join(dir, "package.json"));

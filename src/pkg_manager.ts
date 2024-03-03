@@ -1,8 +1,8 @@
 // Copyright 2024 the JSR authors. MIT license.
 import { InstallOptions } from "./commands";
-import { exec, findProjectDir, JsrPackage } from "./utils";
+import { exec, findProjectDir, JsrPackage, logDebug } from "./utils";
 import * as kl from "kolorist";
-import latestVersion from 'latest-version'
+import latestVersion from "latest-version";
 
 async function execWithLog(cmd: string, args: string[], cwd: string) {
   console.log(kl.dim(`$ ${cmd} ${args.join(" ")}`));
@@ -21,6 +21,24 @@ function toPackageArgs(pkgs: JsrPackage[]): string[] {
   return pkgs.map(
     (pkg) => `@${pkg.scope}/${pkg.name}@npm:${pkg.toNpmPackage()}`,
   );
+}
+
+async function isYarnBerry(cwd: string) {
+  // works for both yarn classic and berry
+  const version = await exec("yarn", ["--version"], cwd, undefined, true);
+
+  if (!version) {
+    logDebug("Could not detect yarn version, assuming classic");
+    return false; // assume yarn classic if no version detected
+  }
+
+  if (version.startsWith("1.")) {
+    logDebug("Detected yarn classic from version");
+    return false;
+  }
+
+  logDebug("Detected yarn berry from version");
+  return true;
 }
 
 export interface PackageManager {
@@ -112,7 +130,7 @@ export class YarnBerry extends Yarn {
 
   private async toPackageArgs(pkgs: JsrPackage[]): Promise<string[]> {
     for (const pkg of pkgs) {
-      pkg.version ??= `^${await latestVersion(pkg.name)}` // nasty workaround for https://github.com/yarnpkg/berry/issues/1816
+      pkg.version ??= `^${await latestVersion(pkg.name)}`; // nasty workaround for https://github.com/yarnpkg/berry/issues/1816
     }
 
     return toPackageArgs(pkgs);
@@ -171,12 +189,11 @@ export class Bun implements PackageManager {
   }
 }
 
-export type PkgManagerName = "npm" | "yarn" | "yarn-berry" | "pnpm" | "bun";
+export type PkgManagerName = "npm" | "yarn" | "pnpm" | "bun";
 
 function getPkgManagerFromEnv(value: string): PkgManagerName | null {
   if (value.startsWith("pnpm/")) return "pnpm";
-  else if (value.startsWith("yarn/1")) return "yarn";
-  else if (value.startsWith("yarn/")) return "yarn-berry";
+  else if (value.startsWith("yarn/")) return "yarn";
   else if (value.startsWith("npm/")) return "npm";
   else if (value.startsWith("bun/")) return "bun";
   else return null;
@@ -197,18 +214,10 @@ export async function getPkgManager(
 
   let result = pkgManagerName || fromEnv || fromLockfile || "npm";
 
-  // for when --yarn is specified but we detect yarn v2+ is being used
-  if (
-    result === "yarn" &&
-    (fromEnv === "yarn-berry" || fromLockfile === "yarn-berry")
-  ) {
-    result = "yarn-berry";
-  }
-
   if (result === "yarn") {
-    return new Yarn(projectDir);
-  } else if (result === "yarn-berry") {
-    return new YarnBerry(projectDir);
+    return await isYarnBerry(projectDir)
+      ? new YarnBerry(projectDir)
+      : new Yarn(projectDir);
   } else if (result === "pnpm") {
     return new Pnpm(projectDir);
   } else if (result === "bun") {

@@ -135,6 +135,23 @@ describe("install", () => {
     );
   });
 
+  it("jsr add --yarn @std/encoding@0.216.0 - forces yarn berry", async () => {
+    await withTempEnv(
+      ["i", "--yarn", "@std/encoding@0.216.0"],
+      async (_, dir) => {
+        assert.ok(
+          await isFile(path.join(dir, "yarn.lock")),
+          "yarn lockfile not created",
+        );
+        assert.ok(
+          await isFile(path.join(dir, ".yarnrc.yml")),
+          "yarnrc file not created",
+        );
+      },
+      { prepare: enableYarnBerry },
+    );
+  });
+
   it("jsr add --pnpm @std/encoding@0.216.0 - forces pnpm", async () => {
     await withTempEnv(
       ["i", "--pnpm", "@std/encoding@0.216.0"],
@@ -183,30 +200,6 @@ describe("install", () => {
             npm_config_user_agent:
               `pnpm/8.14.3 ${process.env.npm_config_user_agent}`,
           },
-        },
-      );
-    });
-
-    it("detect yarn-berry from npm_config_user_agent", async () => {
-      await withTempEnv(
-        ["i", "@std/encoding@0.216.0"],
-        async (_, dir) => {
-          assert.ok(
-            await isFile(path.join(dir, "yarn.lock")),
-            "yarn lockfile not created",
-          );
-          assert.ok(
-            await isFile(path.join(dir, ".yarnrc.yml")),
-            "yarnrc file not created",
-          );
-        },
-        {
-          env: {
-            ...process.env,
-            npm_config_user_agent:
-              `yarn/4.1.0 ${process.env.npm_config_user_agent}`,
-          },
-          prepare: enableYarnBerry,
         },
       );
     });

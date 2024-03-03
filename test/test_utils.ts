@@ -26,7 +26,7 @@ export interface DenoJson {
  * specified directory to be the latest modern stable version of yarn.
  */
 export async function enableYarnBerry(cwd: string) {
-  return await exec("yarn", ["set", "version", "berry"], cwd);
+  await exec("yarn", ["set", "version", "berry"], cwd);
 }
 
 export async function runJsr(

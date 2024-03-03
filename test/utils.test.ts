@@ -23,18 +23,6 @@ describe("findProjectDir", () => {
       assert.strictEqual(result.pkgManagerName, "yarn");
     });
   });
-  it("should return yarn-berry if yarn.lock and .yarnrc.yml is found", async () => {
-    await runInTempDir(async (tempDir) => {
-      await fs.promises.writeFile(path.join(tempDir, "yarn.lock"), "", "utf-8");
-      await fs.promises.writeFile(
-        path.join(tempDir, ".yarnrc.yml"),
-        "",
-        "utf-8",
-      );
-      const result = await findProjectDir(tempDir);
-      assert.strictEqual(result.pkgManagerName, "yarn-berry");
-    });
-  });
   it("should return pnpm if pnpm-lock.yaml is found", async () => {
     await runInTempDir(async (tempDir) => {
       await fs.promises.writeFile(

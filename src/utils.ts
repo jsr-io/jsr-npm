@@ -105,13 +105,7 @@ export async function findProjectDir(
   const yarnLockFile = path.join(dir, "yarn.lock");
   if (await fileExists(yarnLockFile)) {
     logDebug(`Detected yarn from lockfile ${yarnLockFile}`);
-    const yarnBerryRcFile = path.join(dir, ".yarnrc.yml");
-    if (await fileExists(yarnBerryRcFile)) {
-      logDebug(`Detected yarn v2+ from yarnrc file ${yarnBerryRcFile}`);
-      result.pkgManagerName = "yarn-berry";
-    } else {
-      result.pkgManagerName = "yarn";
-    }
+    result.pkgManagerName = "yarn";
     result.projectDir = dir;
     return result;
   }
@@ -165,12 +159,28 @@ export async function exec(
   args: string[],
   cwd: string,
   env?: Record<string, string | undefined>,
+  captureStdout?: boolean,
 ) {
-  const cp = spawn(cmd, args, { stdio: "inherit", cwd, shell: true, env });
+  const cp = spawn(cmd, args, {
+    stdio: captureStdout ? "pipe" : "inherit",
+    cwd,
+    shell: true,
+    env,
+  });
 
-  return new Promise<void>((resolve) => {
+  return new Promise<string | undefined>((resolve) => {
+    let stdoutChunks: string[] | undefined;
+
+    if (captureStdout) {
+      stdoutChunks = [];
+      cp.stdout?.on("data", (data) => {
+        stdoutChunks!.push(data);
+      });
+    }
+
     cp.on("exit", (code) => {
-      if (code === 0) resolve();
+      const stdout = stdoutChunks?.join("");
+      if (code === 0) resolve(stdout);
       else process.exit(code ?? 1);
     });
   });

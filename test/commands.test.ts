@@ -2,6 +2,7 @@ import * as path from "path";
 import * as fs from "fs";
 import {
   DenoJson,
+  enableYarnBerry,
   isDirectory,
   isFile,
   PkgJson,
@@ -182,6 +183,30 @@ describe("install", () => {
             npm_config_user_agent:
               `pnpm/8.14.3 ${process.env.npm_config_user_agent}`,
           },
+        },
+      );
+    });
+
+    it("detect yarn-berry from npm_config_user_agent", async () => {
+      await withTempEnv(
+        ["i", "@std/encoding@0.216.0"],
+        async (_, dir) => {
+          assert.ok(
+            await isFile(path.join(dir, "yarn.lock")),
+            "yarn lockfile not created",
+          );
+          assert.ok(
+            await isFile(path.join(dir, ".yarnrc.yml")),
+            "yarnrc file not created",
+          );
+        },
+        {
+          env: {
+            ...process.env,
+            npm_config_user_agent:
+              `yarn/4.1.0 ${process.env.npm_config_user_agent}`,
+          },
+          prepare: enableYarnBerry,
         },
       );
     });

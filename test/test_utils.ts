@@ -21,6 +21,14 @@ export interface DenoJson {
   exports: string | Record<string, string>;
 }
 
+/**
+ * This sets the `packageManager` field in the `package.json` of the
+ * specified directory to be the latest modern stable version of yarn.
+ */
+export async function enableYarnBerry(cwd: string) {
+  return await exec("yarn", ["set", "version", "berry"], cwd);
+}
+
 export async function runJsr(
   args: string[],
   cwd: string,
@@ -51,9 +59,10 @@ export async function runInTempDir(fn: (dir: string) => Promise<void>) {
 export async function withTempEnv(
   args: string[],
   fn: (getPkgJson: () => Promise<PkgJson>, dir: string) => Promise<void>,
-  options: { env?: Record<string, string> } = {},
+  options: { env?: Record<string, string>; prepare?: (dir: string) => Promise<void> | void } = {},
 ): Promise<void> {
   await runInTempDir(async (dir) => {
+    await options.prepare?.(dir);
     await runJsr(args, dir, options.env);
     const pkgJson = async () =>
       readJson<PkgJson>(path.join(dir, "package.json"));

@@ -2,6 +2,7 @@
 import { InstallOptions } from "./commands";
 import { exec, findProjectDir, JsrPackage } from "./utils";
 import * as kl from "kolorist";
+import latestVersion from 'latest-version'
 
 async function execWithLog(cmd: string, args: string[], cwd: string) {
   console.log(kl.dim(`$ ${cmd} ${args.join(" ")}`));
@@ -84,11 +85,37 @@ class Yarn implements PackageManager {
 }
 
 export class YarnBerry extends Yarn {
+  async install(packages: JsrPackage[], options: InstallOptions) {
+    const args = ["add"];
+    const mode = this.modeToFlag(options.mode);
+    if (mode !== "") {
+      args.push(mode);
+    }
+    args.push(...(await this.toPackageArgs(packages)));
+    await execWithLog("yarn", args, this.cwd);
+  }
+
   /**
    * Calls the `yarn config set` command, https://yarnpkg.com/cli/config/set.
    */
   async setConfigValue(key: string, value: string) {
     await execWithLog("yarn", ["config", "set", key, value], this.cwd);
+  }
+
+  private modeToFlag(mode: InstallOptions["mode"]): string {
+    return mode === "dev"
+      ? "--dev"
+      : mode === "optional"
+      ? "--optional"
+      : "";
+  }
+
+  private async toPackageArgs(pkgs: JsrPackage[]): Promise<string[]> {
+    for (const pkg of pkgs) {
+      pkg.version ??= `^${await latestVersion(pkg.name)}` // nasty workaround for https://github.com/yarnpkg/berry/issues/1816
+    }
+
+    return toPackageArgs(pkgs);
   }
 }
 

@@ -8,9 +8,9 @@ import { downloadDeno, getDenoDownloadUrl } from "./download";
 
 const NPMRC_FILE = ".npmrc";
 const BUNFIG_FILE = "bunfig.toml";
-const JSR_REGISTRY = "https://npm.jsr.io";
-const JSR_NPMRC = `@jsr:registry=${JSR_REGISTRY}\n`;
-const JSR_BUNFIG = `[install.scopes]\n"@jsr" = "${JSR_REGISTRY}"\n`;
+const JSR_NPM_REGISTRY_URL = "https://npm.jsr.io";
+const JSR_NPMRC = `@jsr:registry=${JSR_NPM_REGISTRY_URL}\n`;
+const JSR_BUNFIG = `[install.scopes]\n"@jsr" = "${JSR_NPM_REGISTRY_URL}"\n`;
 const JSR_YARN_BERRY_CONFIG_KEY = "npmScopes.jsr.npmRegistryServer";
 
 async function wrapWithStatus(msg: string, fn: () => Promise<void>) {
@@ -86,7 +86,7 @@ export async function install(packages: JsrPackage[], options: InstallOptions) {
   } else if (pkgManager instanceof YarnBerry) {
     // Yarn v2+ does not read from .npmrc intentionally
     // https://yarnpkg.com/migration/guide#update-your-configuration-to-the-new-settings
-    await pkgManager.setConfigValue(JSR_YARN_BERRY_CONFIG_KEY, JSR_REGISTRY);
+    await pkgManager.setConfigValue(JSR_YARN_BERRY_CONFIG_KEY, JSR_NPM_REGISTRY_URL);
   } else {
     await setupNpmRc(pkgManager.cwd);
   }

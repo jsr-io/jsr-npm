@@ -27,6 +27,7 @@ export interface PackageManager {
   install(packages: JsrPackage[], options: InstallOptions): Promise<void>;
   remove(packages: JsrPackage[]): Promise<void>;
   runScript(script: string): Promise<void>;
+  setConfigValue?(key: string, value: string): Promise<void>;
 }
 
 class Npm implements PackageManager {
@@ -82,6 +83,15 @@ class Yarn implements PackageManager {
   }
 }
 
+export class YarnBerry extends Yarn {
+  /**
+   * Calls the `yarn config set` command, https://yarnpkg.com/cli/config/set.
+   */
+  async setConfigValue(key: string, value: string) {
+    await execWithLog("yarn", ["config", "set", key, value], this.cwd);
+  }
+}
+
 class Pnpm implements PackageManager {
   constructor(public cwd: string) {}
 
@@ -134,11 +144,12 @@ export class Bun implements PackageManager {
   }
 }
 
-export type PkgManagerName = "npm" | "yarn" | "pnpm" | "bun";
+export type PkgManagerName = "npm" | "yarn" | "yarn-berry" | "pnpm" | "bun";
 
 function getPkgManagerFromEnv(value: string): PkgManagerName | null {
   if (value.startsWith("pnpm/")) return "pnpm";
-  else if (value.startsWith("yarn/")) return "yarn";
+  else if (value.startsWith("yarn/1")) return "yarn";
+  else if (value.startsWith("yarn/")) return "yarn-berry";
   else if (value.startsWith("npm/")) return "npm";
   else if (value.startsWith("bun/")) return "bun";
   else return null;
@@ -157,10 +168,20 @@ export async function getPkgManager(
     cwd,
   );
 
-  const result = pkgManagerName || fromEnv || fromLockfile || "npm";
+  let result = pkgManagerName || fromEnv || fromLockfile || "npm";
+
+  // for when --yarn is specified but we detect yarn v2+ is being used
+  if (
+    result === "yarn" &&
+    (fromEnv === "yarn-berry" || fromLockfile === "yarn-berry")
+  ) {
+    result = "yarn-berry";
+  }
 
   if (result === "yarn") {
     return new Yarn(projectDir);
+  } else if (result === "yarn-berry") {
+    return new YarnBerry(projectDir);
   } else if (result === "pnpm") {
     return new Pnpm(projectDir);
   } else if (result === "bun") {

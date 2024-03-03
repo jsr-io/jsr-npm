@@ -3,13 +3,15 @@ import * as path from "node:path";
 import * as fs from "node:fs";
 import * as kl from "kolorist";
 import { exec, fileExists, JsrPackage } from "./utils";
-import { Bun, getPkgManager, PkgManagerName } from "./pkg_manager";
+import { Bun, YarnBerry, getPkgManager, PkgManagerName } from "./pkg_manager";
 import { downloadDeno, getDenoDownloadUrl } from "./download";
 
 const NPMRC_FILE = ".npmrc";
 const BUNFIG_FILE = "bunfig.toml";
-const JSR_NPMRC = `@jsr:registry=https://npm.jsr.io\n`;
-const JSR_BUNFIG = `[install.scopes]\n"@jsr" = "https://npm.jsr.io/"\n`;
+const JSR_REGISTRY = "https://npm.jsr.io";
+const JSR_NPMRC = `@jsr:registry=${JSR_REGISTRY}\n`;
+const JSR_BUNFIG = `[install.scopes]\n"@jsr" = "${JSR_REGISTRY}"\n`;
+const JSR_YARN_BERRY_CONFIG_KEY = "npmScopes.jsr.npmRegistryServer";
 
 async function wrapWithStatus(msg: string, fn: () => Promise<void>) {
   process.stdout.write(msg + "...");
@@ -81,6 +83,10 @@ export async function install(packages: JsrPackage[], options: InstallOptions) {
   if (pkgManager instanceof Bun) {
     // Bun doesn't support reading from .npmrc yet
     await setupBunfigToml(pkgManager.cwd);
+  } else if (pkgManager instanceof YarnBerry) {
+    // Yarn v2+ does not read from .npmrc intentionally
+    // https://yarnpkg.com/migration/guide#update-your-configuration-to-the-new-settings
+    await pkgManager.setConfigValue(JSR_YARN_BERRY_CONFIG_KEY, JSR_REGISTRY);
   } else {
     await setupNpmRc(pkgManager.cwd);
   }

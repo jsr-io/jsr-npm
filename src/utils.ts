@@ -101,11 +101,18 @@ export async function findProjectDir(
     return result;
   }
 
+  // this could either be yarn v1 or yarn berry (v2+)
   const yarnLockFile = path.join(dir, "yarn.lock");
   if (await fileExists(yarnLockFile)) {
     logDebug(`Detected yarn from lockfile ${yarnLockFile}`);
+    const yarnBerryRcFile = path.join(dir, ".yarnrc.yml");
+    if (await fileExists(yarnBerryRcFile)) {
+      logDebug(`Detected yarn v2+ from yarnrc file ${yarnBerryRcFile}`);
+      result.pkgManagerName = "yarn-berry";
+    } else {
+      result.pkgManagerName = "yarn";
+    }
     result.projectDir = dir;
-    result.pkgManagerName = "yarn";
     return result;
   }
 

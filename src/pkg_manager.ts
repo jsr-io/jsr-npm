@@ -29,35 +29,32 @@ function toPackageArgs(pkgs: JsrPackage[]): string[] {
 }
 
 async function isYarnBerry(cwd: string) {
-  // works for both yarn classic and berry
+  // this command works for both yarn classic and berry
   const version = await exec("yarn", ["--version"], cwd, undefined, true);
-
   if (!version) {
-    logDebug("Could not detect yarn version, assuming classic");
-    return false; // assume yarn classic if no version detected
+    logDebug("Unable to detect yarn version, assuming classic");
+    return false;
   }
-
   if (version.startsWith("1.")) {
     logDebug("Detected yarn classic from version");
     return false;
   }
-
   logDebug("Detected yarn berry from version");
   return true;
 }
 
-async function getLatestPackageVersion(
-  pkg: JsrPackage,
-): Promise<string | undefined> {
+async function getLatestPackageVersion(pkg: JsrPackage) {
   const url = `${JSR_URL}/${pkg}/meta.json`;
   const res = await fetch(url);
-  const body = await res.json();
-
-  if (res.ok) {
-    return body.latest;
+  const body = await res.text();
+  if (!res.ok) {
+    throw new Error(`Received ${res.status} from ${url}`);
   }
-
-  throw new Error(`Received ${res.status} from ${url}`);
+  const { latest } = JSON.parse(body);
+  if (!latest) {
+    throw new Error(`Unable to find latest version of ${pkg}`);
+  }
+  return latest;
 }
 
 export interface PackageManager {

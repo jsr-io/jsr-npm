@@ -2,7 +2,8 @@
 import { InstallOptions } from "./commands";
 import { exec, findProjectDir, JsrPackage, logDebug } from "./utils";
 import * as kl from "kolorist";
-import latestVersion from "latest-version";
+
+const JSR_URL = "https://jsr.io";
 
 async function execWithLog(cmd: string, args: string[], cwd: string) {
   console.log(kl.dim(`$ ${cmd} ${args.join(" ")}`));
@@ -18,11 +19,7 @@ function modeToFlag(mode: InstallOptions["mode"]): string {
 }
 
 function modeToFlagYarn(mode: InstallOptions["mode"]): string {
-  return mode === "dev"
-    ? "--dev"
-    : mode === "optional"
-    ? "--optional"
-    : "";
+  return mode === "dev" ? "--dev" : mode === "optional" ? "--optional" : "";
 }
 
 function toPackageArgs(pkgs: JsrPackage[]): string[] {
@@ -47,6 +44,20 @@ async function isYarnBerry(cwd: string) {
 
   logDebug("Detected yarn berry from version");
   return true;
+}
+
+async function getLatestPackageVersion(
+  pkg: JsrPackage,
+): Promise<string | undefined> {
+  const url = `${JSR_URL}/${pkg}/meta.json`;
+  const res = await fetch(url);
+  const body = await res.json();
+
+  if (res.ok) {
+    return body.latest;
+  }
+
+  throw new Error(`Received ${res.status} from ${url}`);
 }
 
 export interface PackageManager {
@@ -130,7 +141,7 @@ export class YarnBerry extends Yarn {
 
   private async toPackageArgs(pkgs: JsrPackage[]): Promise<string[]> {
     for (const pkg of pkgs) {
-      pkg.version ??= `^${await latestVersion(pkg.name)}`; // nasty workaround for https://github.com/yarnpkg/berry/issues/1816
+      pkg.version ??= `^${await getLatestPackageVersion(pkg)}`; // nasty workaround for https://github.com/yarnpkg/berry/issues/1816
     }
 
     return toPackageArgs(pkgs);

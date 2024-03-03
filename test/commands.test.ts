@@ -41,11 +41,9 @@ describe("install", () => {
 
     await runInTempDir(async (dir) => {
       await enableYarnBerry(dir);
+      await fs.promises.writeFile(path.join(dir, "yarn.lock"), "");
 
-      await runJsr(["i", "@std/encoding"], dir, {
-        npm_config_user_agent:
-          `yarn/4.1.0 ${process.env.npm_config_user_agent}`,
-      });
+      await runJsr(["i", "@std/encoding"], dir);
 
       const pkgJson = await readJson<PkgJson>(path.join(dir, "package.json"));
       assert.ok(
@@ -224,11 +222,10 @@ describe("install", () => {
         );
       },
     );
-  });
 
-  it("jsr add --yarn @std/encoding@0.216.0 - forces yarn berry", async () => {
     await runInTempDir(async (dir) => {
       await enableYarnBerry(dir);
+
       await runJsr(["i", "--yarn", "@std/encoding@0.216.0"], dir);
 
       assert.ok(
@@ -292,6 +289,43 @@ describe("install", () => {
           },
         },
       );
+    });
+
+    it("detect yarn from npm_config_user_agent", async () => {
+      await withTempEnv(
+        ["i", "@std/encoding@0.216.0"],
+        async (_, dir) => {
+          assert.ok(
+            await isFile(path.join(dir, "yarn.lock")),
+            "yarn lockfile not created",
+          );
+        },
+        {
+          env: {
+            ...process.env,
+            npm_config_user_agent:
+              `yarn/1.22.19 ${process.env.npm_config_user_agent}`,
+          },
+        },
+      );
+
+      await runInTempDir(async (dir) => {
+        await enableYarnBerry(dir);
+
+        await runJsr(["i", "@std/encoding@0.216.0"], dir, {
+          npm_config_user_agent:
+            `yarn/4.1.0 ${process.env.npm_config_user_agent}`,
+        });
+
+        assert.ok(
+          await isFile(path.join(dir, "yarn.lock")),
+          "yarn lockfile not created",
+        );
+        assert.ok(
+          await isFile(path.join(dir, ".yarnrc.yml")),
+          "yarnrc file not created",
+        );
+      });
     });
 
     if (process.platform !== "win32") {

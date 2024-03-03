@@ -3,7 +3,7 @@ import * as path from "node:path";
 import * as fs from "node:fs";
 import * as kl from "kolorist";
 import { exec, fileExists, JsrPackage } from "./utils";
-import { Bun, YarnBerry, getPkgManager, PkgManagerName } from "./pkg_manager";
+import { Bun, getPkgManager, PkgManagerName, YarnBerry } from "./pkg_manager";
 import { downloadDeno, getDenoDownloadUrl } from "./download";
 
 const NPMRC_FILE = ".npmrc";
@@ -86,7 +86,10 @@ export async function install(packages: JsrPackage[], options: InstallOptions) {
   } else if (pkgManager instanceof YarnBerry) {
     // Yarn v2+ does not read from .npmrc intentionally
     // https://yarnpkg.com/migration/guide#update-your-configuration-to-the-new-settings
-    await pkgManager.setConfigValue(JSR_YARN_BERRY_CONFIG_KEY, JSR_NPM_REGISTRY_URL);
+    await pkgManager.setConfigValue(
+      JSR_YARN_BERRY_CONFIG_KEY,
+      JSR_NPM_REGISTRY_URL,
+    );
   } else {
     await setupNpmRc(pkgManager.cwd);
   }

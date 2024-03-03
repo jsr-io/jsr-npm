@@ -102,7 +102,7 @@ describe("install", () => {
       assert.deepEqual(pkgJson.devDependencies, {
         "@std/encoding": "npm:@jsr/std__encoding@0.216.0",
       });
-    })
+    });
 
     if (process.platform !== "win32") {
       await withTempEnv(
@@ -116,7 +116,7 @@ describe("install", () => {
           assert.deepEqual(pkgJson.devDependencies, {
             "@std/encoding": "npm:@jsr/std__encoding@0.216.0",
           });
-        }
+        },
       );
     }
   });
@@ -156,7 +156,7 @@ describe("install", () => {
       assert.deepEqual(pkgJson.optionalDependencies, {
         "@std/encoding": "npm:@jsr/std__encoding@0.216.0",
       });
-    })
+    });
 
     if (process.platform !== "win32") {
       await withTempEnv(
@@ -170,7 +170,7 @@ describe("install", () => {
           assert.deepEqual(pkgJson.optionalDependencies, {
             "@std/encoding": "npm:@jsr/std__encoding@0.216.0",
           });
-        }
+        },
       );
     }
   });
@@ -212,7 +212,7 @@ describe("install", () => {
         await isFile(path.join(dir, ".yarnrc.yml")),
         "yarnrc file not created",
       );
-    })
+    });
   });
 
   it("jsr add --pnpm @std/encoding@0.216.0 - forces pnpm", async () => {

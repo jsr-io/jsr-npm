@@ -38,6 +38,33 @@ describe("install", () => {
         "Missing npmrc registry",
       );
     });
+
+    await runInTempDir(async (dir) => {
+      await enableYarnBerry(dir);
+
+      await runJsr(["i", "@std/encoding"], dir, {
+        npm_config_user_agent:
+          `yarn/4.1.0 ${process.env.npm_config_user_agent}`,
+      });
+
+      const pkgJson = await readJson<PkgJson>(path.join(dir, "package.json"));
+      assert.ok(
+        pkgJson.dependencies && "@std/encoding" in pkgJson.dependencies,
+        "Missing dependency entry",
+      );
+
+      assert.match(
+        pkgJson.dependencies["@std/encoding"],
+        /^npm:@jsr\/std__encoding@\^\d+\.\d+\.\d+.*$/,
+      );
+
+      const yarnrcPath = path.join(dir, ".yarnrc.yml");
+      const yarnRc = await fs.promises.readFile(yarnrcPath, "utf-8");
+      assert.ok(
+        /jsr:\s*npmRegistryServer: "https:\/\/npm\.jsr\.io"/.test(yarnRc),
+        "Missing yarnrc.yml registry",
+      );
+    });
   });
 
   it("jsr i @std/encoding@0.216.0 - with version", async () => {

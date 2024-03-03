@@ -57,6 +57,7 @@ jobs:
       - uses: pnpm/action-setup@v3
         with:
           version: 8
+      - run: corepack enable yarn
 
       - run: npm i
       - run: npm run build --if-present

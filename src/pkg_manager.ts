@@ -139,9 +139,10 @@ export class YarnBerry extends Yarn {
     await execWithLog("yarn", ["config", "set", key, value], this.cwd);
   }
 
-  private async toPackageArgs(pkgs: JsrPackage[]): Promise<string[]> {
+  private async toPackageArgs(pkgs: JsrPackage[]) {
+    // nasty workaround for https://github.com/yarnpkg/berry/issues/1816
     await Promise.all(pkgs.map(async (pkg) => {
-      pkg.version ??= `^${await getLatestPackageVersion(pkg)}`; // nasty workaround for https://github.com/yarnpkg/berry/issues/1816
+      pkg.version ??= `^${await getLatestPackageVersion(pkg)}`;
     }));
     return toPackageArgs(pkgs);
   }

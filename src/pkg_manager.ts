@@ -17,6 +17,14 @@ function modeToFlag(mode: InstallOptions["mode"]): string {
     : "";
 }
 
+function modeToFlagYarn(mode: InstallOptions["mode"]): string {
+  return mode === "dev"
+    ? "--dev"
+    : mode === "optional"
+    ? "--optional"
+    : "";
+}
+
 function toPackageArgs(pkgs: JsrPackage[]): string[] {
   return pkgs.map(
     (pkg) => `@${pkg.scope}/${pkg.name}@npm:${pkg.toNpmPackage()}`,
@@ -81,7 +89,7 @@ class Yarn implements PackageManager {
 
   async install(packages: JsrPackage[], options: InstallOptions) {
     const args = ["add"];
-    const mode = modeToFlag(options.mode);
+    const mode = modeToFlagYarn(options.mode);
     if (mode !== "") {
       args.push(mode);
     }
@@ -105,7 +113,7 @@ class Yarn implements PackageManager {
 export class YarnBerry extends Yarn {
   async install(packages: JsrPackage[], options: InstallOptions) {
     const args = ["add"];
-    const mode = this.modeToFlag(options.mode);
+    const mode = modeToFlagYarn(options.mode);
     if (mode !== "") {
       args.push(mode);
     }
@@ -118,14 +126,6 @@ export class YarnBerry extends Yarn {
    */
   async setConfigValue(key: string, value: string) {
     await execWithLog("yarn", ["config", "set", key, value], this.cwd);
-  }
-
-  private modeToFlag(mode: InstallOptions["mode"]): string {
-    return mode === "dev"
-      ? "--dev"
-      : mode === "optional"
-      ? "--optional"
-      : "";
   }
 
   private async toPackageArgs(pkgs: JsrPackage[]): Promise<string[]> {
@@ -168,7 +168,7 @@ export class Bun implements PackageManager {
 
   async install(packages: JsrPackage[], options: InstallOptions) {
     const args = ["add"];
-    const mode = modeToFlag(options.mode);
+    const mode = modeToFlagYarn(options.mode);
     if (mode !== "") {
       args.push(mode);
     }
@@ -212,7 +212,7 @@ export async function getPkgManager(
     cwd,
   );
 
-  let result = pkgManagerName || fromEnv || fromLockfile || "npm";
+  const result = pkgManagerName || fromEnv || fromLockfile || "npm";
 
   if (result === "yarn") {
     return await isYarnBerry(projectDir)

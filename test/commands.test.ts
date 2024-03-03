@@ -87,6 +87,26 @@ describe("install", () => {
         });
       },
     );
+
+    await withTempEnv(
+      ["i", "--save-dev", "@std/encoding@0.216.0"],
+      async (getPkgJson, dir) => {
+        assert.ok(
+          await isFile(path.join(dir, ".yarnrc.yml")),
+          "yarnrc file not created",
+        );
+        const pkgJson = await getPkgJson();
+        assert.deepEqual(pkgJson.devDependencies, {
+          "@std/encoding": "npm:@jsr/std__encoding@0.216.0",
+        });
+      },
+      {
+        prepare: async (dir) => {
+          await enableYarnBerry(dir);
+          await fs.promises.writeFile(path.join(dir, "yarn.lock"), "");
+        },
+      },
+    );
   });
 
   it("jsr add -O @std/encoding@0.216.0 - dev dependency", async () => {
@@ -107,6 +127,26 @@ describe("install", () => {
         assert.deepEqual(pkgJson.optionalDependencies, {
           "@std/encoding": "npm:@jsr/std__encoding@^0.216.0",
         });
+      },
+    );
+
+    await withTempEnv(
+      ["i", "--save-optional", "@std/encoding@0.216.0"],
+      async (getPkgJson, dir) => {
+        assert.ok(
+          await isFile(path.join(dir, ".yarnrc.yml")),
+          "yarnrc file not created",
+        );
+        const pkgJson = await getPkgJson();
+        assert.deepEqual(pkgJson.optionalDependencies, {
+          "@std/encoding": "npm:@jsr/std__encoding@0.216.0",
+        });
+      },
+      {
+        prepare: async (dir) => {
+          await enableYarnBerry(dir);
+          await fs.promises.writeFile(path.join(dir, "yarn.lock"), "");
+        },
       },
     );
   });

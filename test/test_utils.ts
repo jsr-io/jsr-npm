@@ -32,13 +32,15 @@ export async function enableYarnBerry(cwd: string) {
 export async function runJsr(
   args: string[],
   cwd: string,
-  env: Record<string, string> = {
-    npm_config_user_agent: "npm/",
-  },
+  env: Record<string, string> = {},
 ) {
   const bin = path.join(__dirname, "..", "src", "bin.ts");
   const tsNode = path.join(__dirname, "..", "node_modules", ".bin", "ts-node");
-  return await exec(tsNode, [bin, ...args], cwd, { ...process.env, ...env });
+  return await exec(tsNode, [bin, ...args], cwd, {
+    ...process.env,
+    npm_config_user_agent: undefined,
+    ...env,
+  });
 }
 
 export async function runInTempDir(fn: (dir: string) => Promise<void>) {
@@ -59,7 +61,10 @@ export async function runInTempDir(fn: (dir: string) => Promise<void>) {
 export async function withTempEnv(
   args: string[],
   fn: (getPkgJson: () => Promise<PkgJson>, dir: string) => Promise<void>,
-  options: { env?: Record<string, string>; prepare?: (dir: string) => Promise<void> | void } = {},
+  options: {
+    env?: Record<string, string>;
+    prepare?: (dir: string) => Promise<void> | void;
+  } = {},
 ): Promise<void> {
   await runInTempDir(async (dir) => {
     await options.prepare?.(dir);

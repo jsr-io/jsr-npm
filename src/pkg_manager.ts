@@ -46,13 +46,13 @@ async function isYarnBerry(cwd: string) {
 async function getLatestPackageVersion(pkg: JsrPackage) {
   const url = `${JSR_URL}/${pkg}/meta.json`;
   const res = await fetch(url);
-  // consume the entire response body here even if we don't use it to avoid a potential memory leak in node:
-  // https://github.com/nodejs/undici/tree/c47e9e06d19cf61b2fa1fcbfb6be39a6e3133cab/docs#specification-compliance
-  const body = await res.text();
   if (!res.ok) {
+    // cancel the response body here in order to avoid a potential memory leak in node:
+    // https://github.com/nodejs/undici/tree/c47e9e06d19cf61b2fa1fcbfb6be39a6e3133cab/docs#specification-compliance
+    await res.body?.cancel();
     throw new Error(`Received ${res.status} from ${url}`);
   }
-  const { latest } = JSON.parse(body);
+  const { latest } = await res.json();
   if (!latest) {
     throw new Error(`Unable to find latest version of ${pkg}`);
   }

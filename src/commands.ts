@@ -2,7 +2,7 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
 import * as kl from "kolorist";
-import { exec, fileExists, JsrPackage } from "./utils";
+import { exec, fileExists, getNewLineChars, JsrPackage } from "./utils";
 import { Bun, getPkgManager, PkgManagerName, YarnBerry } from "./pkg_manager";
 import { downloadDeno, getDenoDownloadUrl } from "./download";
 
@@ -31,7 +31,8 @@ export async function setupNpmRc(dir: string) {
   try {
     let content = await fs.promises.readFile(npmRcPath, "utf-8");
     if (!content.includes("@jsr:registry=")) {
-      const spacer = (!content.endsWith("\n")) ? "\n" : "";
+      const nl = getNewLineChars(content);
+      const spacer = (!content.endsWith(nl)) ? nl : "";
       content += spacer + JSR_NPMRC;
       await wrapWithStatus(msg, async () => {
         await fs.promises.writeFile(npmRcPath, content);

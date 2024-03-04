@@ -187,3 +187,11 @@ export async function exec(
     });
   });
 }
+
+export function getNewLineChars(source: string) {
+  var temp = source.indexOf("\n");
+  if (source[temp - 1] === "\r") {
+    return "\r\n";
+  }
+  return "\n";
+}

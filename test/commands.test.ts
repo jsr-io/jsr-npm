@@ -39,6 +39,37 @@ describe("install", () => {
     });
   });
 
+  it("jsr i @std/encoding - adds to nearest package.json", async () => {
+    await runInTempDir(async (dir) => {
+      const parentPkgJson = { name: "", private: true };
+      await writeJson(path.join(dir, "package.json"), parentPkgJson);
+
+      // Create sub folder with package.json
+      await fs.promises.mkdir(path.join(dir, "sub"));
+      await writeJson(path.join(dir, "sub", "package.json"), { name: "foo" });
+
+      await runJsr(["i", "@std/encoding"], path.join(dir, "sub"));
+
+      assert.deepEqual(
+        await readJson(path.join(dir, "package.json")),
+        parentPkgJson,
+      );
+
+      const pkgJson = await readJson<PkgJson>(
+        path.join(dir, "sub", "package.json"),
+      );
+      assert.ok(
+        pkgJson.dependencies && "@std/encoding" in pkgJson.dependencies,
+        "Missing dependency entry",
+      );
+
+      assert.match(
+        pkgJson.dependencies["@std/encoding"],
+        /^npm:@jsr\/std__encoding@\^\d+\.\d+\.\d+.*$/,
+      );
+    });
+  });
+
   it("jsr i @std/encoding@0.216.0 - with version", async () => {
     await withTempEnv(["i", "@std/encoding@0.216.0"], async (getPkgJson) => {
       const pkgJson = await getPkgJson();

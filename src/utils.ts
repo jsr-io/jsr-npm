@@ -160,12 +160,16 @@ export async function exec(
   env?: Record<string, string | undefined>,
   captureStdout?: boolean,
 ) {
-  const cp = spawn(cmd, args, {
-    stdio: captureStdout ? "pipe" : "inherit",
-    cwd,
-    shell: true,
-    env,
-  });
+  const cp = spawn(
+    cmd,
+    args.map((arg) => process.platform === "win32" ? `"${arg}"` : `'${arg}'`),
+    {
+      stdio: captureStdout ? "pipe" : "inherit",
+      cwd,
+      shell: true,
+      env,
+    },
+  );
 
   return new Promise<string | undefined>((resolve) => {
     let stdoutChunks: string[] | undefined;

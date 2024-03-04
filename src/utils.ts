@@ -85,7 +85,6 @@ export async function findProjectDir(
   const npmLockfile = path.join(dir, "package-lock.json");
   if (await fileExists(npmLockfile)) {
     logDebug(`Detected npm from lockfile ${npmLockfile}`);
-    result.projectDir = dir;
     result.pkgManagerName = "npm";
     return result;
   }
@@ -96,7 +95,6 @@ export async function findProjectDir(
   const bunLockfile = path.join(dir, "bun.lockb");
   if (await fileExists(bunLockfile)) {
     logDebug(`Detected bun from lockfile ${bunLockfile}`);
-    result.projectDir = dir;
     result.pkgManagerName = "bun";
     return result;
   }
@@ -104,7 +102,6 @@ export async function findProjectDir(
   const yarnLockFile = path.join(dir, "yarn.lock");
   if (await fileExists(yarnLockFile)) {
     logDebug(`Detected yarn from lockfile ${yarnLockFile}`);
-    result.projectDir = dir;
     result.pkgManagerName = "yarn";
     return result;
   }
@@ -112,15 +109,17 @@ export async function findProjectDir(
   const pnpmLockfile = path.join(dir, "pnpm-lock.yaml");
   if (await fileExists(pnpmLockfile)) {
     logDebug(`Detected pnpm from lockfile ${pnpmLockfile}`);
-    result.projectDir = dir;
     result.pkgManagerName = "pnpm";
     return result;
   }
 
-  const pkgJsonPath = path.join(dir, "package.json");
-  if (await fileExists(pkgJsonPath)) {
-    logDebug(`Found package.json at ${pkgJsonPath}`);
-    result.projectDir = dir;
+  if (result.pkgJsonPath === null) {
+    const pkgJsonPath = path.join(dir, "package.json");
+    if (await fileExists(pkgJsonPath)) {
+      logDebug(`Found package.json at ${pkgJsonPath}`);
+      result.projectDir = dir;
+      result.pkgJsonPath = pkgJsonPath;
+    }
   }
 
   const prev = dir;

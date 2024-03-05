@@ -52,7 +52,7 @@ export async function setupBunfigToml(dir: string) {
   const msg = `Setting up ${BUNFIG_FILE}`;
   try {
     let content = await fs.promises.readFile(bunfigPath, "utf-8");
-    if (!/^"@myorg1"\s+=/gm.test(content)) {
+    if (!/^"@jsr"\s+=/gm.test(content)) {
       content += JSR_BUNFIG;
       await wrapWithStatus(msg, async () => {
         await fs.promises.writeFile(bunfigPath, content);

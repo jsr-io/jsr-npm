@@ -164,6 +164,19 @@ describe("install", () => {
         },
       );
     });
+    it("jsr add --bun @std/encoding@0.216.0 - forces bun for twice", async () => {
+      await withTempEnv(
+        ["i", "--bun", "@std/encoding@0.216.0"],
+        async (_, dir) => {
+          await runJsr(["i", "--bun", "@std/encoding@0.216.0"], dir)
+          const config = await fs.promises.readFile(
+            path.join(dir, "bunfig.toml"),
+            "utf-8",
+          );
+          assert.match(config, /"@jsr"\s+=/, "bunfig.toml not created");
+        }
+      )
+    })
   }
 
   describe("env detection", () => {

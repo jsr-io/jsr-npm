@@ -20,4 +20,26 @@ describe("npmrc", () => {
       assert.equal(content.trim(), "@jsr:registry=https://example.com");
     });
   });
+
+  it("adds newline in between entries if necessary", async () => {
+    await runInTempDir(async (dir) => {
+      const npmrc = path.join(dir, ".npmrc");
+      await fs.promises.writeFile(
+        npmrc,
+        "@foo:registry=https://example.com",
+        "utf-8",
+      );
+
+      await setupNpmRc(dir);
+
+      const content = await fs.promises.readFile(npmrc, "utf-8");
+      assert.equal(
+        content.trim(),
+        [
+          "@foo:registry=https://example.com",
+          "@jsr:registry=https://npm.jsr.io",
+        ].join("\n"),
+      );
+    });
+  });
 });

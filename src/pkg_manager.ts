@@ -1,9 +1,8 @@
 // Copyright 2024 the JSR authors. MIT license.
+import { getLatestPackageVersion } from "./api";
 import { InstallOptions } from "./commands";
 import { exec, findProjectDir, JsrPackage, logDebug } from "./utils";
 import * as kl from "kolorist";
-
-const JSR_URL = "https://jsr.io";
 
 async function execWithLog(cmd: string, args: string[], cwd: string) {
   console.log(kl.dim(`$ ${cmd} ${args.join(" ")}`));
@@ -41,22 +40,6 @@ async function isYarnBerry(cwd: string) {
   }
   logDebug("Detected yarn berry from version");
   return true;
-}
-
-async function getLatestPackageVersion(pkg: JsrPackage) {
-  const url = `${JSR_URL}/${pkg}/meta.json`;
-  const res = await fetch(url);
-  if (!res.ok) {
-    // cancel the response body here in order to avoid a potential memory leak in node:
-    // https://github.com/nodejs/undici/tree/c47e9e06d19cf61b2fa1fcbfb6be39a6e3133cab/docs#specification-compliance
-    await res.body?.cancel();
-    throw new Error(`Received ${res.status} from ${url}`);
-  }
-  const { latest } = await res.json();
-  if (!latest) {
-    throw new Error(`Unable to find latest version of ${pkg}`);
-  }
-  return latest;
 }
 
 export interface PackageManager {

@@ -132,6 +132,9 @@ export async function findProjectDir(
 }
 
 const PERIODS = {
+  year: 365 * 24 * 60 * 60 * 1000,
+  month: 30 * 24 * 60 * 60 * 1000,
+  week: 7 * 24 * 60 * 60 * 1000,
   day: 24 * 60 * 60 * 1000,
   hour: 60 * 60 * 1000,
   minute: 60 * 1000,
@@ -152,37 +155,66 @@ export function prettyTime(diff: number) {
   return diff + "ms";
 }
 
+export function timeAgo(diff: number) {
+  if (diff > PERIODS.year) {
+    const v = Math.floor(diff / PERIODS.year);
+    return `${v} year${v > 1 ? "s" : ""} ago`;
+  } else if (diff > PERIODS.month) {
+    const v = Math.floor(diff / PERIODS.month);
+    return `${v} month${v > 1 ? "s" : ""} ago`;
+  } else if (diff > PERIODS.week) {
+    const v = Math.floor(diff / PERIODS.week);
+    return `${v} week${v > 1 ? "s" : ""} ago`;
+  } else if (diff > PERIODS.day) {
+    const v = Math.floor(diff / PERIODS.day);
+    return `${v} day${v > 1 ? "s" : ""} ago`;
+  } else if (diff > PERIODS.hour) {
+    const v = Math.floor(diff / PERIODS.hour);
+    return `${v} hour${v > 1 ? "s" : ""} ago`;
+  } else if (diff > PERIODS.minute) {
+    const v = Math.floor(diff / PERIODS.minute);
+    return `${v} minute${v > 1 ? "s" : ""} ago`;
+  } else if (diff > PERIODS.seconds) {
+    const v = Math.floor(diff / PERIODS.seconds);
+    return `${v} second${v > 1 ? "s" : ""} ago`;
+  }
+
+  return "just now";
+}
+
 export async function exec(
   cmd: string,
   args: string[],
   cwd: string,
   env?: Record<string, string | undefined>,
-  captureStdout?: boolean,
+  captureOutput?: boolean,
 ) {
   const cp = spawn(
     cmd,
     args.map((arg) => process.platform === "win32" ? `"${arg}"` : `'${arg}'`),
     {
-      stdio: captureStdout ? "pipe" : "inherit",
+      stdio: captureOutput ? "pipe" : "inherit",
       cwd,
       shell: true,
       env,
     },
   );
 
-  return new Promise<string | undefined>((resolve) => {
-    let stdoutChunks: string[] | undefined;
+  let output = "";
 
-    if (captureStdout) {
-      stdoutChunks = [];
-      cp.stdout?.on("data", (data) => {
-        stdoutChunks!.push(data);
-      });
-    }
+  if (captureOutput) {
+    cp.stdout?.on("data", (data) => {
+      output += data;
+    });
+    cp.stderr?.on("data", (data) => {
+      output += data;
+    });
+  }
 
+  return new Promise<string>((resolve) => {
     cp.on("exit", (code) => {
-      const stdout = stdoutChunks?.join("");
-      if (code === 0) resolve(stdout);
+      console.log(output);
+      if (code === 0) resolve(output);
       else process.exit(code ?? 1);
     });
   });

@@ -2,9 +2,16 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
 import * as kl from "kolorist";
-import { exec, fileExists, getNewLineChars, JsrPackage } from "./utils";
+import {
+  exec,
+  fileExists,
+  getNewLineChars,
+  JsrPackage,
+  timeAgo,
+} from "./utils";
 import { Bun, getPkgManager, PkgManagerName, YarnBerry } from "./pkg_manager";
 import { downloadDeno, getDenoDownloadUrl } from "./download";
+import { getNpmPackageInfo, getPackageMeta } from "./api";
 
 const NPMRC_FILE = ".npmrc";
 const BUNFIG_FILE = "bunfig.toml";
@@ -162,6 +169,43 @@ export async function runScript(
   script: string,
   options: BaseOptions,
 ) {
-  const pkgManager = await getPkgManager(process.cwd(), options.pkgManagerName);
+  const pkgManager = await getPkgManager(cwd, options.pkgManagerName);
   await pkgManager.runScript(script);
+}
+
+export async function showPackageInfo(raw: string) {
+  const pkg = JsrPackage.from(raw);
+
+  const meta = await getPackageMeta(pkg);
+  if (pkg.version === null) {
+    if (meta.latest === undefined) {
+      throw new Error(`Missing latest version for ${pkg}`);
+    }
+    pkg.version = meta.latest!;
+  }
+
+  const versionCount = Object.keys(meta.versions).length;
+
+  const npmInfo = await getNpmPackageInfo(pkg);
+
+  const versionInfo = npmInfo.versions[pkg.version]!;
+  const time = npmInfo.time[pkg.version];
+
+  const publishTime = new Date(time).getTime();
+
+  console.log();
+  console.log(
+    kl.cyan(`@${pkg.scope}/${pkg.name}@${pkg.version}`) +
+      ` | latest: ${kl.magenta(meta.latest ?? "-")} | versions: ${
+        kl.magenta(versionCount)
+      }`,
+  );
+  console.log(npmInfo.description);
+  console.log();
+  console.log(`npm tarball:   ${kl.cyan(versionInfo.dist.tarball)}`);
+  console.log(`npm integrity: ${kl.cyan(versionInfo.dist.integrity)}`);
+  console.log();
+  console.log(
+    `published: ${kl.magenta(timeAgo(Date.now() - publishTime))}`,
+  );
 }

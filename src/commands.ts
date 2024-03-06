@@ -162,6 +162,6 @@ export async function runScript(
   script: string,
   options: BaseOptions,
 ) {
-  const pkgManager = await getPkgManager(process.cwd(), options.pkgManagerName);
+  const pkgManager = await getPkgManager(cwd, options.pkgManagerName);
   await pkgManager.runScript(script);
 }

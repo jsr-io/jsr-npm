@@ -4,7 +4,13 @@ import * as kl from "kolorist";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { parseArgs } from "node:util";
-import { install, publish, remove, runScript } from "./commands";
+import {
+  install,
+  publish,
+  remove,
+  runScript,
+  showPackageInfo,
+} from "./commands";
 import { JsrPackage, JsrPackageNameError, prettyTime, setDebug } from "./utils";
 import { PkgManagerName } from "./pkg_manager";
 
@@ -44,6 +50,7 @@ ${
       ["i, install, add", "Install one or more JSR packages."],
       ["r, uninstall, remove", "Remove one or more JSR packages."],
       ["publish", "Publish a package to the JSR registry."],
+      ["info, show, view", "Show package information."],
     ])
   }
 
@@ -115,18 +122,21 @@ function getPackages(positionals: string[]): JsrPackage[] {
 if (args.length === 0) {
   printHelp();
   process.exit(0);
+} else if (args.some((arg) => arg === "-h" || arg === "--help")) {
+  printHelp();
+  process.exit(0);
+} else if (args.some((arg) => arg === "-v" || arg === "--version")) {
+  const version = JSON.parse(
+    fs.readFileSync(path.join(__dirname, "..", "package.json"), "utf-8"),
+  ).version as string;
+  console.log(version);
+  process.exit(0);
 } else {
   const cmd = args[0];
   // Bypass cli argument validation for publish command. The underlying
   // `deno publish` cli is under active development and args may change
   // frequently.
-  if (
-    cmd === "publish" &&
-    !args.some(
-      (arg) =>
-        arg === "-h" || arg === "--help" || arg === "--version" || arg === "-v",
-    )
-  ) {
+  if (cmd === "publish") {
     const binFolder = path.join(__dirname, "..", ".download");
     run(() =>
       publish(process.cwd(), {
@@ -134,6 +144,17 @@ if (args.length === 0) {
         publishArgs: args.slice(1),
       })
     );
+  } else if (cmd === "view" || cmd === "show" || cmd === "info") {
+    const pkgName = args[1];
+    if (pkgName === undefined) {
+      console.log(kl.red(`Missing package name.`));
+      printHelp();
+      process.exit(1);
+    }
+
+    run(async () => {
+      await showPackageInfo(pkgName);
+    });
   } else {
     const options = parseArgs({
       args,
@@ -164,16 +185,7 @@ if (args.length === 0) {
       setDebug(true);
     }
 
-    if (options.values.help) {
-      printHelp();
-      process.exit(0);
-    } else if (options.values.version) {
-      const version = JSON.parse(
-        fs.readFileSync(path.join(__dirname, "..", "package.json"), "utf-8"),
-      ).version as string;
-      console.log(version);
-      process.exit(0);
-    } else if (options.positionals.length === 0) {
+    if (options.positionals.length === 0) {
       printHelp();
       process.exit(0);
     }

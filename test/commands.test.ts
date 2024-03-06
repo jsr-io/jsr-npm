@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as fs from "fs";
+import * as kl from "kolorist";
 import {
   DenoJson,
   enableYarnBerry,
@@ -544,5 +545,33 @@ describe("run", () => {
 
       await runJsr(["test"], dir);
     });
+  });
+});
+
+describe("show", () => {
+  it("should show package information", async () => {
+    const output = await runJsr(
+      ["show", "@std/encoding"],
+      process.cwd(),
+      undefined,
+      true,
+    );
+    const txt = kl.stripColors(output);
+    assert.ok(txt.includes("latest:"));
+    assert.ok(txt.includes("npm tarball:"));
+  });
+
+  it("can use 'view' alias", async () => {
+    await runJsr(
+      ["view", "@std/encoding"],
+      process.cwd(),
+    );
+  });
+
+  it("can use 'info' alias", async () => {
+    await runJsr(
+      ["view", "@std/encoding"],
+      process.cwd(),
+    );
   });
 });

@@ -33,6 +33,7 @@ export async function runJsr(
   args: string[],
   cwd: string,
   env: Record<string, string> = {},
+  captureOutput = false,
 ) {
   const bin = path.join(__dirname, "..", "src", "bin.ts");
   const tsNode = path.join(__dirname, "..", "node_modules", ".bin", "ts-node");
@@ -40,7 +41,7 @@ export async function runJsr(
     ...process.env,
     npm_config_user_agent: undefined,
     ...env,
-  });
+  }, captureOutput);
 }
 
 export async function runInTempDir(fn: (dir: string) => Promise<void>) {

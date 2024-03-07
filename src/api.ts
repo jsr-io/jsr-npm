@@ -12,7 +12,6 @@ export interface PackageMeta {
 
 export async function getPackageMeta(pkg: JsrPackage): Promise<PackageMeta> {
   const url = `${JSR_URL}/@${pkg.scope}/${pkg.name}/meta.json`;
-  console.log("FETCH", url);
   const res = await fetch(url);
   if (!res.ok) {
     // cancel unconsumed body to avoid memory leak

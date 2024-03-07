@@ -161,7 +161,10 @@ export async function publish(cwd: string, options: PublishOptions) {
     "--no-check",
     ...options.publishArgs,
   ];
-  await exec(binPath, args, cwd);
+  await exec(binPath, args, cwd, {
+    ...process.env,
+    DENO_DISABLE_PEDANTIC_NODE_WARNINGS: "true",
+  });
 }
 
 export async function runScript(

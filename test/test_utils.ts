@@ -1,19 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
-import { exec } from "../src/utils";
-
-export interface PkgJson {
-  name: string;
-  version: string;
-  license: string;
-
-  dependencies?: Record<string, string>;
-  devDependencies?: Record<string, string>;
-  optionalDependencies?: Record<string, string>;
-  exports?: string | Record<string, string | Record<string, string>>;
-  scripts?: Record<string, string>;
-}
+import { exec, writeJson } from "../src/utils";
 
 export interface DenoJson {
   name: string;
@@ -61,14 +49,12 @@ export async function runInTempDir(fn: (dir: string) => Promise<void>) {
 
 export async function withTempEnv(
   args: string[],
-  fn: (getPkgJson: () => Promise<PkgJson>, dir: string) => Promise<void>,
+  fn: (dir: string) => Promise<void>,
   options: { env?: Record<string, string> } = {},
 ): Promise<void> {
   await runInTempDir(async (dir) => {
     await runJsr(args, dir, options.env);
-    const pkgJson = async () =>
-      readJson<PkgJson>(path.join(dir, "package.json"));
-    await fn(pkgJson, dir);
+    await fn(dir);
   });
 }
 
@@ -86,13 +72,4 @@ export async function isFile(path: string): Promise<boolean> {
   } catch (err) {
     return false;
   }
-}
-
-export async function readJson<T>(file: string): Promise<T> {
-  const content = await fs.promises.readFile(file, "utf-8");
-  return JSON.parse(content);
-}
-
-export async function writeJson<T>(file: string, data: T): Promise<void> {
-  await fs.promises.writeFile(file, JSON.stringify(data, null, 2), "utf-8");
 }

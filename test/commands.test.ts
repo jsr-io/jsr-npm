@@ -6,19 +6,23 @@ import {
   enableYarnBerry,
   isDirectory,
   isFile,
-  PkgJson,
-  readJson,
   runInTempDir,
   runJsr,
   withTempEnv,
-  writeJson,
 } from "./test_utils";
 import * as assert from "node:assert/strict";
+import {
+  PkgJson,
+  readJson,
+  readTextFile,
+  writeJson,
+  writeTextFile,
+} from "../src/utils";
 
 describe("install", () => {
   it("jsr i @std/encoding - resolve latest version", async () => {
-    await withTempEnv(["i", "@std/encoding"], async (getPkgJson, dir) => {
-      const pkgJson = await getPkgJson();
+    await withTempEnv(["i", "@std/encoding"], async (dir) => {
+      const pkgJson = await readJson<PkgJson>(path.join(dir, "package.json"));
       assert.ok(
         pkgJson.dependencies && "@std/encoding" in pkgJson.dependencies,
         "Missing dependency entry",
@@ -33,7 +37,7 @@ describe("install", () => {
       assert.ok(await isDirectory(depPath), "Not installed in node_modules");
 
       const npmrcPath = path.join(dir, ".npmrc");
-      const npmRc = await fs.promises.readFile(npmrcPath, "utf-8");
+      const npmRc = await readTextFile(npmrcPath);
       assert.ok(
         npmRc.includes("@jsr:registry=https://npm.jsr.io"),
         "Missing npmrc registry",
@@ -42,7 +46,7 @@ describe("install", () => {
 
     await runInTempDir(async (dir) => {
       await enableYarnBerry(dir);
-      await fs.promises.writeFile(path.join(dir, "yarn.lock"), "");
+      await writeTextFile(path.join(dir, "yarn.lock"), "");
 
       await runJsr(["i", "@std/encoding"], dir);
 
@@ -57,8 +61,7 @@ describe("install", () => {
         /^npm:@jsr\/std__encoding@\^\d+\.\d+\.\d+.*$/,
       );
 
-      const yarnrcPath = path.join(dir, ".yarnrc.yml");
-      const yarnRc = await fs.promises.readFile(yarnrcPath, "utf-8");
+      const yarnRc = await readTextFile(path.join(dir, ".yarnrc.yml"));
       assert.ok(
         /jsr:\s*npmRegistryServer: "https:\/\/npm\.jsr\.io"/.test(yarnRc),
         "Missing yarnrc.yml registry",
@@ -69,22 +72,21 @@ describe("install", () => {
   it("jsr i @std/encoding - adds to nearest package.json", async () => {
     await runInTempDir(async (dir) => {
       const parentPkgJson = { name: "", private: true };
-      await writeJson(path.join(dir, "package.json"), parentPkgJson);
+      const parentPkgJsonPath = path.join(dir, "package.json");
+      await writeJson<PkgJson>(parentPkgJsonPath, parentPkgJson);
 
       // Create sub folder with package.json
-      await fs.promises.mkdir(path.join(dir, "sub"));
-      await writeJson(path.join(dir, "sub", "package.json"), { name: "foo" });
+      const subPkgJsonPath = path.join(dir, "sub", "package.json");
+      await writeJson(subPkgJsonPath, { name: "foo" });
 
       await runJsr(["i", "@std/encoding"], path.join(dir, "sub"));
 
       assert.deepEqual(
-        await readJson(path.join(dir, "package.json")),
+        await readJson<PkgJson>(path.join(dir, "package.json")),
         parentPkgJson,
       );
 
-      const pkgJson = await readJson<PkgJson>(
-        path.join(dir, "sub", "package.json"),
-      );
+      const pkgJson = await readJson<PkgJson>(subPkgJsonPath);
       assert.ok(
         pkgJson.dependencies && "@std/encoding" in pkgJson.dependencies,
         "Missing dependency entry",
@@ -98,8 +100,8 @@ describe("install", () => {
   });
 
   it("jsr i @std/encoding@0.216.0 - with version", async () => {
-    await withTempEnv(["i", "@std/encoding@0.216.0"], async (getPkgJson) => {
-      const pkgJson = await getPkgJson();
+    await withTempEnv(["i", "@std/encoding@0.216.0"], async (dir) => {
+      const pkgJson = await readJson<PkgJson>(path.join(dir, "package.json"));
       assert.deepEqual(pkgJson.dependencies, {
         "@std/encoding": "npm:@jsr/std__encoding@^0.216.0",
       });
@@ -107,8 +109,8 @@ describe("install", () => {
   });
 
   it("jsr install @std/encoding@0.216.0 - command", async () => {
-    await withTempEnv(["i", "@std/encoding@0.216.0"], async (getPkgJson) => {
-      const pkgJson = await getPkgJson();
+    await withTempEnv(["i", "@std/encoding@0.216.0"], async (dir) => {
+      const pkgJson = await readJson<PkgJson>(path.join(dir, "package.json"));
       assert.deepEqual(pkgJson.dependencies, {
         "@std/encoding": "npm:@jsr/std__encoding@^0.216.0",
       });
@@ -116,8 +118,8 @@ describe("install", () => {
   });
 
   it("jsr add @std/encoding@0.216.0 - command", async () => {
-    await withTempEnv(["i", "@std/encoding@0.216.0"], async (getPkgJson) => {
-      const pkgJson = await getPkgJson();
+    await withTempEnv(["i", "@std/encoding@0.216.0"], async (dir) => {
+      const pkgJson = await readJson<PkgJson>(path.join(dir, "package.json"));
       assert.deepEqual(pkgJson.dependencies, {
         "@std/encoding": "npm:@jsr/std__encoding@^0.216.0",
       });
@@ -127,8 +129,8 @@ describe("install", () => {
   it("jsr add -D @std/encoding@0.216.0 - dev dependency", async () => {
     await withTempEnv(
       ["i", "-D", "@std/encoding@0.216.0"],
-      async (getPkgJson) => {
-        const pkgJson = await getPkgJson();
+      async (dir) => {
+        const pkgJson = await readJson<PkgJson>(path.join(dir, "package.json"));
         assert.deepEqual(pkgJson.devDependencies, {
           "@std/encoding": "npm:@jsr/std__encoding@^0.216.0",
         });
@@ -137,8 +139,8 @@ describe("install", () => {
 
     await withTempEnv(
       ["i", "--save-dev", "@std/encoding@0.216.0"],
-      async (getPkgJson) => {
-        const pkgJson = await getPkgJson();
+      async (dir) => {
+        const pkgJson = await readJson<PkgJson>(path.join(dir, "package.json"));
         assert.deepEqual(pkgJson.devDependencies, {
           "@std/encoding": "npm:@jsr/std__encoding@^0.216.0",
         });
@@ -147,7 +149,7 @@ describe("install", () => {
 
     await runInTempDir(async (dir) => {
       await enableYarnBerry(dir);
-      await fs.promises.writeFile(path.join(dir, "yarn.lock"), "");
+      await writeTextFile(path.join(dir, "yarn.lock"), "");
 
       await runJsr(["i", "--save-dev", "@std/encoding@0.216.0"], dir);
 
@@ -164,12 +166,14 @@ describe("install", () => {
     if (process.platform !== "win32") {
       await withTempEnv(
         ["i", "--bun", "--save-dev", "@std/encoding@0.216.0"],
-        async (getPkgJson, dir) => {
+        async (dir) => {
           assert.ok(
             await isFile(path.join(dir, "bun.lockb")),
             "bun lockfile not created",
           );
-          const pkgJson = await getPkgJson();
+          const pkgJson = await readJson<PkgJson>(
+            path.join(dir, "package.json"),
+          );
           assert.deepEqual(pkgJson.devDependencies, {
             "@std/encoding": "npm:@jsr/std__encoding@0.216.0",
           });
@@ -181,8 +185,8 @@ describe("install", () => {
   it("jsr add -O @std/encoding@0.216.0 - dev dependency", async () => {
     await withTempEnv(
       ["i", "-O", "@std/encoding@0.216.0"],
-      async (getPkgJson) => {
-        const pkgJson = await getPkgJson();
+      async (dir) => {
+        const pkgJson = await readJson<PkgJson>(path.join(dir, "package.json"));
         assert.deepEqual(pkgJson.optionalDependencies, {
           "@std/encoding": "npm:@jsr/std__encoding@^0.216.0",
         });
@@ -191,8 +195,8 @@ describe("install", () => {
 
     await withTempEnv(
       ["i", "--save-optional", "@std/encoding@0.216.0"],
-      async (getPkgJson) => {
-        const pkgJson = await getPkgJson();
+      async (dir) => {
+        const pkgJson = await readJson<PkgJson>(path.join(dir, "package.json"));
         assert.deepEqual(pkgJson.optionalDependencies, {
           "@std/encoding": "npm:@jsr/std__encoding@^0.216.0",
         });
@@ -218,12 +222,14 @@ describe("install", () => {
     if (process.platform !== "win32") {
       await withTempEnv(
         ["i", "--bun", "--save-optional", "@std/encoding@0.216.0"],
-        async (getPkgJson, dir) => {
+        async (dir) => {
           assert.ok(
             await isFile(path.join(dir, "bun.lockb")),
             "bun lockfile not created",
           );
-          const pkgJson = await getPkgJson();
+          const pkgJson = await readJson<PkgJson>(
+            path.join(dir, "package.json"),
+          );
           assert.deepEqual(pkgJson.optionalDependencies, {
             "@std/encoding": "npm:@jsr/std__encoding@0.216.0",
           });
@@ -235,7 +241,7 @@ describe("install", () => {
   it("jsr add --npm @std/encoding@0.216.0 - forces npm", async () => {
     await withTempEnv(
       ["i", "--npm", "@std/encoding@0.216.0"],
-      async (_, dir) => {
+      async (dir) => {
         assert.ok(
           await isFile(path.join(dir, "package-lock.json")),
           "npm lockfile not created",
@@ -247,7 +253,7 @@ describe("install", () => {
   it("jsr add --yarn @std/encoding@0.216.0 - forces yarn", async () => {
     await withTempEnv(
       ["i", "--yarn", "@std/encoding@0.216.0"],
-      async (_, dir) => {
+      async (dir) => {
         assert.ok(
           await isFile(path.join(dir, "yarn.lock")),
           "yarn lockfile not created",
@@ -274,7 +280,7 @@ describe("install", () => {
   it("jsr add --pnpm @std/encoding@0.216.0 - forces pnpm", async () => {
     await withTempEnv(
       ["i", "--pnpm", "@std/encoding@0.216.0"],
-      async (_, dir) => {
+      async (dir) => {
         assert.ok(
           await isFile(path.join(dir, "pnpm-lock.yaml")),
           "pnpm lockfile not created",
@@ -287,16 +293,13 @@ describe("install", () => {
     it("jsr add --bun @std/encoding@0.216.0 - forces bun", async () => {
       await withTempEnv(
         ["i", "--bun", "@std/encoding@0.216.0"],
-        async (_, dir) => {
+        async (dir) => {
           assert.ok(
             await isFile(path.join(dir, "bun.lockb")),
             "bun lockfile not created",
           );
 
-          const config = await fs.promises.readFile(
-            path.join(dir, "bunfig.toml"),
-            "utf-8",
-          );
+          const config = await readTextFile(path.join(dir, "bunfig.toml"));
           assert.match(config, /"@jsr"\s+=/, "bunfig.toml not created");
         },
       );
@@ -304,12 +307,9 @@ describe("install", () => {
     it("jsr add --bun @std/encoding@0.216.0 - forces bun for twice", async () => {
       await withTempEnv(
         ["i", "--bun", "@std/encoding@0.216.0"],
-        async (_, dir) => {
+        async (dir) => {
           await runJsr(["i", "--bun", "@std/encoding@0.216.0"], dir);
-          const config = await fs.promises.readFile(
-            path.join(dir, "bunfig.toml"),
-            "utf-8",
-          );
+          const config = await readTextFile(path.join(dir, "bunfig.toml"));
           assert.match(config, /"@jsr"\s+=/, "bunfig.toml not created");
         },
       );
@@ -320,7 +320,7 @@ describe("install", () => {
     it("detect pnpm from npm_config_user_agent", async () => {
       await withTempEnv(
         ["i", "@std/encoding@0.216.0"],
-        async (_, dir) => {
+        async (dir) => {
           assert.ok(
             await isFile(path.join(dir, "pnpm-lock.yaml")),
             "pnpm lockfile not created",
@@ -339,7 +339,7 @@ describe("install", () => {
     it("detect yarn from npm_config_user_agent", async () => {
       await withTempEnv(
         ["i", "@std/encoding@0.216.0"],
-        async (_, dir) => {
+        async (dir) => {
           assert.ok(
             await isFile(path.join(dir, "yarn.lock")),
             "yarn lockfile not created",
@@ -377,7 +377,7 @@ describe("install", () => {
       it("detect bun from npm_config_user_agent", async () => {
         await withTempEnv(
           ["i", "@std/encoding@0.216.0"],
-          async (_, dir) => {
+          async (dir) => {
             assert.ok(
               await isFile(path.join(dir, "bun.lockb")),
               "bun lockfile not created",
@@ -400,10 +400,10 @@ describe("remove", () => {
   it("jsr r @std/encoding@0.216.0 - removes node_modules", async () => {
     await withTempEnv(
       ["i", "@std/encoding@0.216.0"],
-      async (getPkgJson, dir) => {
+      async (dir) => {
         await runJsr(["r", "@std/encoding"], dir);
 
-        const pkgJson = await getPkgJson();
+        const pkgJson = await readJson<PkgJson>(path.join(dir, "package.json"));
         assert.equal(pkgJson.dependencies, undefined);
 
         const depPath = path.join(dir, "node_modules", "@std", "encoding");
@@ -418,10 +418,10 @@ describe("remove", () => {
   it("jsr r @std/encoding@0.216.0 - command", async () => {
     await withTempEnv(
       ["i", "@std/encoding@0.216.0"],
-      async (getPkgJson, dir) => {
+      async (dir) => {
         await runJsr(["r", "@std/encoding"], dir);
 
-        const pkgJson = await getPkgJson();
+        const pkgJson = await readJson<PkgJson>(path.join(dir, "package.json"));
         assert.equal(pkgJson.dependencies, undefined);
       },
     );
@@ -430,10 +430,10 @@ describe("remove", () => {
   it("jsr remove @std/encoding@0.216.0 - command", async () => {
     await withTempEnv(
       ["i", "@std/encoding@0.216.0"],
-      async (getPkgJson, dir) => {
+      async (dir) => {
         await runJsr(["remove", "@std/encoding"], dir);
 
-        const pkgJson = await getPkgJson();
+        const pkgJson = await readJson<PkgJson>(path.join(dir, "package.json"));
         assert.equal(pkgJson.dependencies, undefined);
       },
     );
@@ -442,10 +442,10 @@ describe("remove", () => {
   it("jsr uninstall @std/encoding@0.216.0 - command", async () => {
     await withTempEnv(
       ["i", "@std/encoding@0.216.0"],
-      async (getPkgJson, dir) => {
+      async (dir) => {
         await runJsr(["uninstall", "@std/encoding"], dir);
 
-        const pkgJson = await getPkgJson();
+        const pkgJson = await readJson<PkgJson>(path.join(dir, "package.json"));
         assert.equal(pkgJson.dependencies, undefined);
       },
     );
@@ -460,22 +460,17 @@ describe("publish", () => {
       pkgJson.exports = {
         ".": "./mod.js",
       };
-      await fs.promises.writeFile(
-        pkgJsonPath,
-        JSON.stringify(pkgJson),
-        "utf-8",
-      );
+      await writeJson(pkgJsonPath, pkgJson);
 
-      await fs.promises.writeFile(
+      await writeTextFile(
         path.join(dir, "mod.ts"),
         "export const value = 42;",
-        "utf-8",
       );
 
       // TODO: Change this once deno supports jsr.json
       await writeJson<DenoJson>(path.join(dir, "deno.json"), {
         name: "@deno/jsr-cli-test",
-        version: pkgJson.version,
+        version: pkgJson.version!,
         exports: {
           ".": "./mod.ts",
         },
@@ -489,10 +484,9 @@ describe("publish", () => {
   if (process.platform !== "win32") {
     it("use deno binary from DENO_BIN_PATH when set", async () => {
       await runInTempDir(async (dir) => {
-        await fs.promises.writeFile(
+        await writeTextFile(
           path.join(dir, "mod.ts"),
           "export const value = 42;",
-          "utf-8",
         );
 
         // TODO: Change this once deno supports jsr.json
@@ -520,11 +514,7 @@ describe("run", () => {
       pkgJson.scripts = {
         test: 'echo "test"',
       };
-      await fs.promises.writeFile(
-        pkgJsonPath,
-        JSON.stringify(pkgJson),
-        "utf-8",
-      );
+      await writeJson(pkgJsonPath, pkgJson);
 
       await runJsr(["run", "test"], dir);
     });
@@ -537,11 +527,7 @@ describe("run", () => {
       pkgJson.scripts = {
         test: 'echo "test"',
       };
-      await fs.promises.writeFile(
-        pkgJsonPath,
-        JSON.stringify(pkgJson),
-        "utf-8",
-      );
+      await writeJson(pkgJsonPath, pkgJson);
 
       await runJsr(["test"], dir);
     });

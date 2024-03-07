@@ -227,3 +227,40 @@ export function getNewLineChars(source: string) {
   }
   return "\n";
 }
+
+export async function readJson<T>(file: string): Promise<T> {
+  const content = await fs.promises.readFile(file, "utf-8");
+  return JSON.parse(content);
+}
+
+export interface PkgJson {
+  name?: string;
+  version?: string;
+  license?: string;
+
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  optionalDependencies?: Record<string, string>;
+  exports?: string | Record<string, string | Record<string, string>>;
+  scripts?: Record<string, string>;
+}
+
+export async function writeJson<T>(file: string, data: T): Promise<void> {
+  try {
+    await fs.promises.mkdir(path.dirname(file), { recursive: true });
+  } catch (_) {}
+  await fs.promises.writeFile(file, JSON.stringify(data, null, 2), "utf-8");
+}
+
+export async function readTextFile(file: string): Promise<string> {
+  return fs.promises.readFile(file, "utf-8");
+}
+export async function writeTextFile(
+  file: string,
+  content: string,
+): Promise<void> {
+  try {
+    await fs.promises.mkdir(path.dirname(file), { recursive: true });
+  } catch (_) {}
+  await fs.promises.writeFile(file, content, "utf-8");
+}

@@ -2,7 +2,7 @@ import * as path from "path";
 import { runInTempDir } from "./test_utils";
 import { setupNpmRc } from "../src/commands";
 import * as assert from "assert/strict";
-import { readTextFile, writeTextFile } from "../src/utils";
+import { NpmPackage, readTextFile, writeTextFile } from "../src/utils";
 
 describe("npmrc", () => {
   it("doesn't overwrite exising jsr mapping", async () => {
@@ -33,5 +33,24 @@ describe("npmrc", () => {
         ].join("\n"),
       );
     });
+  });
+});
+
+describe("NpmPackage", () => {
+  it("parse", () => {
+    assert.equal(NpmPackage.from("foo").toString(), "foo");
+    assert.equal(NpmPackage.from("foo-bar").toString(), "foo-bar");
+    assert.equal(
+      NpmPackage.from("@foo-bar/foo-bar").toString(),
+      "@foo-bar/foo-bar",
+    );
+    assert.equal(
+      NpmPackage.from("@foo-bar@1.0.0").toString(),
+      "@foo-bar@1.0.0",
+    );
+    assert.equal(
+      NpmPackage.from("@foo-bar/baz@1.0.0").toString(),
+      "@foo-bar/baz@1.0.0",
+    );
   });
 });

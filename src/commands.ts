@@ -7,6 +7,7 @@ import {
   fileExists,
   getNewLineChars,
   JsrPackage,
+  NpmPackage,
   timeAgo,
 } from "./utils";
 import { Bun, getPkgManager, PkgManagerName, YarnBerry } from "./pkg_manager";
@@ -84,9 +85,13 @@ export interface BaseOptions {
 
 export interface InstallOptions extends BaseOptions {
   mode: "dev" | "prod" | "optional";
+  global: boolean;
 }
 
-export async function install(packages: JsrPackage[], options: InstallOptions) {
+export async function install(
+  packages: Array<JsrPackage | NpmPackage>,
+  options: InstallOptions,
+) {
   const pkgManager = await getPkgManager(process.cwd(), options.pkgManagerName);
 
   if (pkgManager instanceof Bun) {
@@ -107,7 +112,10 @@ export async function install(packages: JsrPackage[], options: InstallOptions) {
   await pkgManager.install(packages, options);
 }
 
-export async function remove(packages: JsrPackage[], options: BaseOptions) {
+export async function remove(
+  packages: Array<JsrPackage | NpmPackage>,
+  options: BaseOptions,
+) {
   const pkgManager = await getPkgManager(process.cwd(), options.pkgManagerName);
   console.log(`Removing ${kl.cyan(packages.join(", "))}...`);
   await pkgManager.remove(packages);

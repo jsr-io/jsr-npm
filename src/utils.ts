@@ -14,13 +14,15 @@ export function logDebug(msg: string) {
   }
 }
 
+const EXTRACT_REG_NPM = /^(@([a-z][a-z0-9-]+)\/)?([a-z0-9-]+)(@(.+))?$/;
 const EXTRACT_REG = /^@([a-z][a-z0-9-]+)\/([a-z0-9-]+)(@(.+))?$/;
 const EXTRACT_REG_PROXY = /^@jsr\/([a-z][a-z0-9-]+)__([a-z0-9-]+)(@(.+))?$/;
 
 export class JsrPackageNameError extends Error {}
+export class NpmPackageNameError extends Error {}
 
 export class JsrPackage {
-  static from(input: string) {
+  static from(input: string): JsrPackage {
     const exactMatch = input.match(EXTRACT_REG);
     if (exactMatch !== null) {
       const scope = exactMatch[1];
@@ -56,6 +58,34 @@ export class JsrPackage {
   toString() {
     const version = this.version !== null ? `@${this.version}` : "";
     return `@${this.scope}/${this.name}${version}`;
+  }
+}
+
+export class NpmPackage {
+  static from(input: string): NpmPackage {
+    const match = input.match(EXTRACT_REG_NPM);
+    if (match === null) {
+      throw new NpmPackageNameError(`Invalid npm package name: ${input}`);
+    }
+
+    const scope = match[2] ?? null;
+    const name = match[3];
+    const version = match[5] ?? null;
+
+    return new NpmPackage(scope, name, version);
+  }
+
+  private constructor(
+    public scope: string | null,
+    public name: string,
+    public version: string | null,
+  ) {}
+
+  toString() {
+    let s = this.scope ? `@${this.scope}/` : "";
+    s += this.name;
+    if (this.version !== null) s += `@${this.version}`;
+    return s;
   }
 }
 

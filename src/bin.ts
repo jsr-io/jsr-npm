@@ -11,7 +11,13 @@ import {
   runScript,
   showPackageInfo,
 } from "./commands";
-import { JsrPackage, JsrPackageNameError, prettyTime, setDebug } from "./utils";
+import {
+  JsrPackage,
+  JsrPackageNameError,
+  NpmPackage,
+  prettyTime,
+  setDebug,
+} from "./utils";
 import { PkgManagerName } from "./pkg_manager";
 
 const args = process.argv.slice(2);
@@ -63,6 +69,7 @@ ${
       ],
       ["-D, --save-dev", "Package will be added to devDependencies."],
       ["-O, --save-optional", "Package will be added to optionalDependencies."],
+      ["-g, --global", "Install packages globally."],
       ["--npm", "Use npm to remove and install packages."],
       ["--yarn", "Use yarn to remove and install packages."],
       ["--pnpm", "Use pnpm to remove and install packages."],
@@ -105,9 +112,19 @@ ${
 `);
 }
 
-function getPackages(positionals: string[]): JsrPackage[] {
+function getPackages(positionals: string[]): Array<JsrPackage | NpmPackage> {
   const pkgArgs = positionals.slice(1);
-  const packages = pkgArgs.map((p) => JsrPackage.from(p));
+  const packages = pkgArgs.map((p) => {
+    try {
+      return JsrPackage.from(p);
+    } catch (_) {
+      try {
+        return NpmPackage.from(p);
+      } catch (_) {
+        throw new Error(`Invalid jsr or npm package name: ${p}`);
+      }
+    }
+  });
 
   if (pkgArgs.length === 0) {
     console.error(kl.red(`Missing packages argument.`));
@@ -167,6 +184,7 @@ if (args.length === 0) {
         "allow-slow-types": { type: "boolean", default: false },
         token: { type: "string" },
         config: { type: "string", short: "c" },
+        global: { type: "boolean", short: "g" },
         "no-config": { type: "boolean" },
         check: { type: "string" },
         "no-check": { type: "string" },
@@ -209,6 +227,7 @@ if (args.length === 0) {
             : options.values["save-optional"]
             ? "optional"
             : "prod",
+          global: options.values.global ?? false,
           pkgManagerName,
         });
       });

@@ -196,6 +196,8 @@ if (args.length === 0) {
       ? "yarn"
       : options.values.bun
       ? "bun"
+      : options.values.npm
+      ? "npm"
       : null;
 
     if (cmd === "i" || cmd === "install" || cmd === "add") {

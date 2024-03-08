@@ -336,6 +336,25 @@ describe("install", () => {
       );
     });
 
+    it("overwrite detection with arg from npm_config_user_agent", async () => {
+      await withTempEnv(
+        ["i", "--npm", "@std/encoding@0.216.0"],
+        async (dir) => {
+          assert.ok(
+            await isFile(path.join(dir, "package-lock.json")),
+            "npm lockfile not created",
+          );
+        },
+        {
+          env: {
+            ...process.env,
+            npm_config_user_agent:
+              `pnpm/8.14.3 ${process.env.npm_config_user_agent}`,
+          },
+        },
+      );
+    });
+
     it("detect yarn from npm_config_user_agent", async () => {
       await withTempEnv(
         ["i", "@std/encoding@0.216.0"],

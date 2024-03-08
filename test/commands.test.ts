@@ -499,6 +499,44 @@ describe("publish", () => {
     });
   }).timeout(600000);
 
+  it("should leave node_modules as is", async () => {
+    await runInTempDir(async (dir) => {
+      const pkgJsonPath = path.join(dir, "package.json");
+      const pkgJson = await readJson<PkgJson>(pkgJsonPath);
+      pkgJson.exports = {
+        ".": "./mod.js",
+      };
+      await writeJson(pkgJsonPath, pkgJson);
+
+      // Add dependency
+      await runJsr(["i", "--npm", "@std/encoding@0.216.0"], dir);
+
+      await writeTextFile(
+        path.join(dir, "mod.ts"),
+        [
+          'import * as encoding from "@std/encoding/hex";',
+          "console.log(encoding);",
+          "export const value = 42;",
+        ].join("\n"),
+      );
+
+      await writeJson<DenoJson>(path.join(dir, "jsr.json"), {
+        name: "@deno/jsr-cli-test",
+        version: pkgJson.version!,
+        exports: {
+          ".": "./mod.ts",
+        },
+      });
+
+      await runJsr(["publish", "--dry-run", "--token", "dummy-token"], dir);
+
+      assert.ok(
+        !(await isDirectory(path.join(dir, "node_modules", ".deno"))),
+        ".deno found inside node_modules",
+      );
+    });
+  });
+
   // Windows doesn't support #!/usr/bin/env
   if (process.platform !== "win32") {
     it("use deno binary from DENO_BIN_PATH when set", async () => {

@@ -158,6 +158,7 @@ export async function publish(cwd: string, options: PublishOptions) {
     "publish",
     "--unstable-bare-node-builtins",
     "--unstable-sloppy-imports",
+    "--unstable-byonm",
     "--no-check",
     ...options.publishArgs,
   ];

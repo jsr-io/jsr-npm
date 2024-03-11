@@ -514,7 +514,7 @@ describe("publish", () => {
         },
       });
 
-      await runJsr(["publish", "--dry-run", "--token", "dummy-token"], dir);
+      await runJsr(["publish", "--dry-run"], dir);
     });
   }).timeout(600000);
 
@@ -537,7 +537,7 @@ describe("publish", () => {
       });
 
       try {
-        await runJsr(["publish", "--dry-run", "--token", "dummy-token"], dir);
+        await runJsr(["publish", "--dry-run"], dir);
         assert.fail();
       } catch (err) {
         assert.ok(err instanceof ExecError, `Unknown exec error thrown`);
@@ -574,7 +574,7 @@ describe("publish", () => {
         },
       });
 
-      await runJsr(["publish", "--dry-run", "--token", "dummy-token"], dir);
+      await runJsr(["publish", "--dry-run"], dir);
 
       assert.ok(
         !(await isDirectory(path.join(dir, "node_modules", ".deno"))),

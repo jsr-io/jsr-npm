@@ -185,6 +185,12 @@ export function timeAgo(diff: number) {
   return "just now";
 }
 
+export class ExecError extends Error {
+  constructor(public code: number) {
+    super(`Child process exited with: ${code}`);
+  }
+}
+
 export async function exec(
   cmd: string,
   args: string[],
@@ -214,11 +220,10 @@ export async function exec(
     });
   }
 
-  return new Promise<string>((resolve) => {
+  return new Promise<string>((resolve, reject) => {
     cp.on("exit", (code) => {
-      console.log(output);
       if (code === 0) resolve(output);
-      else process.exit(code ?? 1);
+      else reject(new ExecError(code ?? 1));
     });
   });
 }

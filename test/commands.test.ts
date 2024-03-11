@@ -13,6 +13,7 @@ import {
 import * as assert from "node:assert/strict";
 import {
   exec,
+  ExecError,
   PkgJson,
   readJson,
   readTextFile,
@@ -514,6 +515,33 @@ describe("publish", () => {
       });
 
       await runJsr(["publish", "--dry-run", "--token", "dummy-token"], dir);
+    });
+  }).timeout(600000);
+
+  it("should not add unstable publish flags for a Deno project", async () => {
+    await runInTempDir(async (dir) => {
+      const pkgJsonPath = path.join(dir, "package.json");
+      await fs.promises.rm(pkgJsonPath);
+
+      await writeTextFile(
+        path.join(dir, "mod.ts"),
+        ["import * as fs from 'fs';", "console.log(fs)"].join("\n"),
+      );
+
+      await writeJson<DenoJson>(path.join(dir, "deno.json"), {
+        name: "@deno/jsr-cli-test",
+        version: "0.0.1",
+        exports: {
+          ".": "./mod.ts",
+        },
+      });
+
+      try {
+        await runJsr(["publish", "--dry-run", "--token", "dummy-token"], dir);
+        assert.fail();
+      } catch (err) {
+        assert.ok(err instanceof ExecError, `Unknown exec error thrown`);
+      }
     });
   }).timeout(600000);
 

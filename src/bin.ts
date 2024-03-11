@@ -11,7 +11,14 @@ import {
   runScript,
   showPackageInfo,
 } from "./commands";
-import { JsrPackage, JsrPackageNameError, prettyTime, setDebug } from "./utils";
+import {
+  ExecError,
+  findProjectDir,
+  JsrPackage,
+  JsrPackageNameError,
+  prettyTime,
+  setDebug,
+} from "./utils";
 import { PkgManagerName } from "./pkg_manager";
 
 const args = process.argv.slice(2);
@@ -138,12 +145,14 @@ if (args.length === 0) {
   // frequently.
   if (cmd === "publish") {
     const binFolder = path.join(__dirname, "..", ".download");
-    run(() =>
-      publish(process.cwd(), {
+    run(async () => {
+      const projectInfo = await findProjectDir(process.cwd());
+      return publish(process.cwd(), {
         binFolder,
         publishArgs: args.slice(1),
-      })
-    );
+        pkgJsonPath: projectInfo.pkgJsonPath,
+      });
+    });
   } else if (cmd === "view" || cmd === "show" || cmd === "info") {
     const pkgName = args[1];
     if (pkgName === undefined) {
@@ -260,6 +269,9 @@ async function run(fn: () => Promise<void>) {
     if (err instanceof JsrPackageNameError) {
       console.log(kl.red(err.message));
       process.exit(1);
+    } else if (err instanceof ExecError) {
+      console.log(kl.red(err.message));
+      process.exit(err.code);
     }
 
     throw err;

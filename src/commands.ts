@@ -115,6 +115,7 @@ export async function remove(packages: JsrPackage[], options: BaseOptions) {
 
 export interface PublishOptions {
   binFolder: string;
+  pkgJsonPath: string | null;
   publishArgs: string[];
 }
 
@@ -156,16 +157,25 @@ export async function publish(cwd: string, options: PublishOptions) {
   // Ready to publish now!
   const args = [
     "publish",
-    "--unstable-bare-node-builtins",
-    "--unstable-sloppy-imports",
-    "--unstable-byonm",
-    "--no-check",
-    ...options.publishArgs,
   ];
-  await exec(binPath, args, cwd, {
-    ...process.env,
-    DENO_DISABLE_PEDANTIC_NODE_WARNINGS: "true",
-  });
+  const env = { ...process.env };
+
+  // These commands should only be added for a node project,
+  // not a Deno project.
+  if (options.pkgJsonPath !== null) {
+    args.push(
+      "--unstable-bare-node-builtins",
+      "--unstable-sloppy-imports",
+      "--unstable-byonm",
+      "--no-check",
+    );
+
+    env.DENO_DISABLE_PEDANTIC_NODE_WARNINGS = "true";
+  }
+
+  args.push(...options.publishArgs);
+
+  await exec(binPath, args, cwd, env);
 }
 
 export async function runScript(

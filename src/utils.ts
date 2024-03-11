@@ -82,6 +82,18 @@ export async function findProjectDir(
     pkgJsonPath: null,
   },
 ): Promise<ProjectInfo> {
+  // Ensure we check for `package.json` first as this defines
+  // the root project location.
+  if (result.pkgJsonPath === null) {
+    const pkgJsonPath = path.join(dir, "package.json");
+    if (await fileExists(pkgJsonPath)) {
+      logDebug(`Found package.json at ${pkgJsonPath}`);
+      logDebug(`Setting project directory to ${dir}`);
+      result.projectDir = dir;
+      result.pkgJsonPath = pkgJsonPath;
+    }
+  }
+
   const npmLockfile = path.join(dir, "package-lock.json");
   if (await fileExists(npmLockfile)) {
     logDebug(`Detected npm from lockfile ${npmLockfile}`);
@@ -111,15 +123,6 @@ export async function findProjectDir(
     logDebug(`Detected pnpm from lockfile ${pnpmLockfile}`);
     result.pkgManagerName = "pnpm";
     return result;
-  }
-
-  if (result.pkgJsonPath === null) {
-    const pkgJsonPath = path.join(dir, "package.json");
-    if (await fileExists(pkgJsonPath)) {
-      logDebug(`Found package.json at ${pkgJsonPath}`);
-      result.projectDir = dir;
-      result.pkgJsonPath = pkgJsonPath;
-    }
   }
 
   const prev = dir;

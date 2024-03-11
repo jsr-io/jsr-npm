@@ -12,6 +12,7 @@ import {
 } from "./test_utils";
 import * as assert from "node:assert/strict";
 import {
+  exec,
   PkgJson,
   readJson,
   readTextFile,
@@ -287,6 +288,23 @@ describe("install", () => {
         );
       },
     );
+  });
+
+  it("pnpm install into existing project", async () => {
+    await runInTempDir(async (dir) => {
+      const sub = path.join(dir, "sub", "sub1");
+      await fs.promises.mkdir(sub, {
+        recursive: true,
+      });
+
+      await exec("pnpm", ["i", "preact"], dir);
+
+      await runJsr(["i", "--pnpm", "@std/encoding@0.216.0"], sub);
+      assert.ok(
+        await isFile(path.join(dir, "pnpm-lock.yaml")),
+        "pnpm lockfile not created",
+      );
+    });
   });
 
   if (process.platform !== "win32") {

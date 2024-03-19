@@ -112,11 +112,11 @@ ${
 `);
 }
 
-function getPackages(positionals: string[]): JsrPackage[] {
+function getPackages(positionals: string[], allowEmpty: boolean): JsrPackage[] {
   const pkgArgs = positionals.slice(1);
   const packages = pkgArgs.map((p) => JsrPackage.from(p));
 
-  if (pkgArgs.length === 0) {
+  if (!allowEmpty && pkgArgs.length === 0) {
     console.error(kl.red(`Missing packages argument.`));
     console.log();
     printHelp();
@@ -211,7 +211,8 @@ if (args.length === 0) {
 
     if (cmd === "i" || cmd === "install" || cmd === "add") {
       run(async () => {
-        const packages = getPackages(options.positionals);
+        const packages = getPackages(options.positionals, true);
+
         await install(packages, {
           mode: options.values["save-dev"]
             ? "dev"
@@ -223,7 +224,7 @@ if (args.length === 0) {
       });
     } else if (cmd === "r" || cmd === "uninstall" || cmd === "remove") {
       run(async () => {
-        const packages = getPackages(options.positionals);
+        const packages = getPackages(options.positionals, false);
         await remove(packages, { pkgManagerName });
       });
     } else if (cmd === "run") {

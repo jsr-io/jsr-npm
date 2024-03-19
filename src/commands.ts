@@ -89,21 +89,24 @@ export interface InstallOptions extends BaseOptions {
 export async function install(packages: JsrPackage[], options: InstallOptions) {
   const pkgManager = await getPkgManager(process.cwd(), options.pkgManagerName);
 
-  if (pkgManager instanceof Bun) {
-    // Bun doesn't support reading from .npmrc yet
-    await setupBunfigToml(pkgManager.cwd);
-  } else if (pkgManager instanceof YarnBerry) {
-    // Yarn v2+ does not read from .npmrc intentionally
-    // https://yarnpkg.com/migration/guide#update-your-configuration-to-the-new-settings
-    await pkgManager.setConfigValue(
-      JSR_YARN_BERRY_CONFIG_KEY,
-      JSR_NPM_REGISTRY_URL,
-    );
-  } else {
-    await setupNpmRc(pkgManager.cwd);
+  if (packages.length > 0) {
+    if (pkgManager instanceof Bun) {
+      // Bun doesn't support reading from .npmrc yet
+      await setupBunfigToml(pkgManager.cwd);
+    } else if (pkgManager instanceof YarnBerry) {
+      // Yarn v2+ does not read from .npmrc intentionally
+      // https://yarnpkg.com/migration/guide#update-your-configuration-to-the-new-settings
+      await pkgManager.setConfigValue(
+        JSR_YARN_BERRY_CONFIG_KEY,
+        JSR_NPM_REGISTRY_URL,
+      );
+    } else {
+      await setupNpmRc(pkgManager.cwd);
+    }
+
+    console.log(`Installing ${kl.cyan(packages.join(", "))}...`);
   }
 
-  console.log(`Installing ${kl.cyan(packages.join(", "))}...`);
   await pkgManager.install(packages, options);
 }
 

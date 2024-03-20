@@ -240,6 +240,25 @@ describe("install", () => {
     }
   });
 
+  it("jsr i - runs '<pkg-manager> install' instead", async () => {
+    await runInTempDir(async (dir) => {
+      await runJsr(["i", "@std/encoding"], dir);
+
+      assert.ok(
+        fs.existsSync(path.join(dir, "node_modules")),
+        "No node_modules created.",
+      );
+
+      await fs.promises.rm(path.join(dir, "node_modules"), { recursive: true });
+
+      await runJsr(["i"], dir);
+      assert.ok(
+        fs.existsSync(path.join(dir, "node_modules")),
+        "No node_modules created.",
+      );
+    });
+  });
+
   it("jsr add --npm @std/encoding@0.216.0 - forces npm", async () => {
     await withTempEnv(
       ["i", "--npm", "@std/encoding@0.216.0"],

@@ -3,6 +3,7 @@ import * as path from "node:path";
 import * as fs from "node:fs";
 import { PkgManagerName } from "./pkg_manager";
 import { spawn } from "node:child_process";
+import * as JSONC from "jsonc-parser";
 
 export let DEBUG = false;
 export function setDebug(enabled: boolean) {
@@ -14,10 +15,12 @@ export function logDebug(msg: string) {
   }
 }
 
+const EXTRACT_REG_NPM = /^(@([a-z][a-z0-9-]+)\/)?([a-z0-9-]+)(@(.+))?$/;
 const EXTRACT_REG = /^@([a-z][a-z0-9-]+)\/([a-z0-9-]+)(@(.+))?$/;
 const EXTRACT_REG_PROXY = /^@jsr\/([a-z][a-z0-9-]+)__([a-z0-9-]+)(@(.+))?$/;
 
 export class JsrPackageNameError extends Error {}
+export class NpmPackageNameError extends Error {}
 
 export class JsrPackage {
   static from(input: string) {
@@ -59,6 +62,36 @@ export class JsrPackage {
   }
 }
 
+export class NpmPackage {
+  static from(input: string): NpmPackage {
+    const match = input.match(EXTRACT_REG_NPM);
+    if (match === null) {
+      throw new NpmPackageNameError(`Invalid npm package name: ${input}`);
+    }
+
+    const scope = match[2] ?? null;
+    const name = match[3];
+    const version = match[5] ?? null;
+
+    return new NpmPackage(scope, name, version);
+  }
+
+  private constructor(
+    public scope: string | null,
+    public name: string,
+    public version: string | null,
+  ) {}
+
+  toString() {
+    let s = this.scope !== null ? `@${this.scope}/` : "";
+    s += this.name;
+    if (this.version !== null) s += `@${this.version}`;
+    return s;
+  }
+}
+
+export type Package = JsrPackage | NpmPackage;
+
 export async function fileExists(file: string): Promise<boolean> {
   try {
     const stat = await fs.promises.stat(file);
@@ -72,6 +105,8 @@ export interface ProjectInfo {
   projectDir: string;
   pkgManagerName: PkgManagerName | null;
   pkgJsonPath: string | null;
+  denoJsonPath: string | null;
+  jsrJsonPath: string | null;
 }
 export async function findProjectDir(
   cwd: string,
@@ -80,6 +115,8 @@ export async function findProjectDir(
     projectDir: cwd,
     pkgManagerName: null,
     pkgJsonPath: null,
+    denoJsonPath: null,
+    jsrJsonPath: null,
   },
 ): Promise<ProjectInfo> {
   // Ensure we check for `package.json` first as this defines
@@ -91,6 +128,29 @@ export async function findProjectDir(
       logDebug(`Setting project directory to ${dir}`);
       result.projectDir = dir;
       result.pkgJsonPath = pkgJsonPath;
+    }
+  }
+
+  if (result.denoJsonPath === null) {
+    const denoJsonPath = path.join(dir, "deno.json");
+    const denoJsoncPath = path.join(dir, "deno.jsonc");
+    if (await fileExists(denoJsonPath)) {
+      logDebug(`Found deno.json at ${denoJsonPath}`);
+      result.denoJsonPath = denoJsonPath;
+    } else if (await fileExists(denoJsoncPath)) {
+      logDebug(`Found deno.jsonc at ${denoJsoncPath}`);
+      result.denoJsonPath = denoJsoncPath;
+    }
+  }
+  if (result.jsrJsonPath === null) {
+    const jsrJsonPath = path.join(dir, "jsr.json");
+    const jsrJsoncPath = path.join(dir, "jsr.jsonc");
+    if (await fileExists(jsrJsonPath)) {
+      logDebug(`Found jsr.json at ${jsrJsonPath}`);
+      result.jsrJsonPath = jsrJsonPath;
+    } else if (await fileExists(jsrJsoncPath)) {
+      logDebug(`Found jsr.jsonc at ${jsrJsoncPath}`);
+      result.jsrJsonPath = jsrJsoncPath;
     }
   }
 
@@ -238,7 +298,14 @@ export function getNewLineChars(source: string) {
 
 export async function readJson<T>(file: string): Promise<T> {
   const content = await fs.promises.readFile(file, "utf-8");
-  return JSON.parse(content);
+  return file.endsWith(".jsonc") ? JSONC.parse(content) : JSON.parse(content);
+}
+
+export interface DenoJson {
+  name?: string;
+  version?: string;
+  exports?: string | Record<string, string>;
+  imports?: Record<string, string>;
 }
 
 export interface PkgJson {

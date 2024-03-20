@@ -1,7 +1,7 @@
 // Copyright 2024 the JSR authors. MIT license.
 import { getLatestPackageVersion } from "./api";
 import { InstallOptions } from "./commands";
-import { exec, findProjectDir, JsrPackage, logDebug } from "./utils";
+import { exec, findProjectDir, JsrPackage, logDebug, Package } from "./utils";
 import * as kl from "kolorist";
 
 async function execWithLog(cmd: string, args: string[], cwd: string) {
@@ -21,9 +21,15 @@ function modeToFlagYarn(mode: InstallOptions["mode"]): string {
   return mode === "dev" ? "--dev" : mode === "optional" ? "--optional" : "";
 }
 
-function toPackageArgs(pkgs: JsrPackage[]): string[] {
+function toPackageArgs(pkgs: Package[]): string[] {
   return pkgs.map(
-    (pkg) => `@${pkg.scope}/${pkg.name}@npm:${pkg.toNpmPackage()}`,
+    (pkg) => {
+      if (pkg instanceof JsrPackage) {
+        return `@${pkg.scope}/${pkg.name}@npm:${pkg.toNpmPackage()}`;
+      } else {
+        return pkg.toString();
+      }
+    },
   );
 }
 
@@ -44,8 +50,8 @@ async function isYarnBerry(cwd: string) {
 
 export interface PackageManager {
   cwd: string;
-  install(packages: JsrPackage[], options: InstallOptions): Promise<void>;
-  remove(packages: JsrPackage[]): Promise<void>;
+  install(packages: Package[], options: InstallOptions): Promise<void>;
+  remove(packages: Package[]): Promise<void>;
   runScript(script: string): Promise<void>;
   setConfigValue?(key: string, value: string): Promise<void>;
 }
@@ -53,7 +59,7 @@ export interface PackageManager {
 class Npm implements PackageManager {
   constructor(public cwd: string) {}
 
-  async install(packages: JsrPackage[], options: InstallOptions) {
+  async install(packages: Package[], options: InstallOptions) {
     const args = ["install"];
     const mode = modeToFlag(options.mode);
     if (mode !== "") {
@@ -64,7 +70,7 @@ class Npm implements PackageManager {
     await execWithLog("npm", args, this.cwd);
   }
 
-  async remove(packages: JsrPackage[]) {
+  async remove(packages: Package[]) {
     await execWithLog(
       "npm",
       ["remove", ...packages.map((pkg) => pkg.toString())],
@@ -80,7 +86,7 @@ class Npm implements PackageManager {
 class Yarn implements PackageManager {
   constructor(public cwd: string) {}
 
-  async install(packages: JsrPackage[], options: InstallOptions) {
+  async install(packages: Package[], options: InstallOptions) {
     const args = ["add"];
     const mode = modeToFlagYarn(options.mode);
     if (mode !== "") {
@@ -90,7 +96,7 @@ class Yarn implements PackageManager {
     await execWithLog("yarn", args, this.cwd);
   }
 
-  async remove(packages: JsrPackage[]) {
+  async remove(packages: Package[]) {
     await execWithLog(
       "yarn",
       ["remove", ...packages.map((pkg) => pkg.toString())],
@@ -104,7 +110,7 @@ class Yarn implements PackageManager {
 }
 
 export class YarnBerry extends Yarn {
-  async install(packages: JsrPackage[], options: InstallOptions) {
+  async install(packages: Package[], options: InstallOptions) {
     const args = ["add"];
     const mode = modeToFlagYarn(options.mode);
     if (mode !== "") {
@@ -121,10 +127,12 @@ export class YarnBerry extends Yarn {
     await execWithLog("yarn", ["config", "set", key, value], this.cwd);
   }
 
-  private async toPackageArgs(pkgs: JsrPackage[]) {
+  private async toPackageArgs(pkgs: Package[]) {
     // nasty workaround for https://github.com/yarnpkg/berry/issues/1816
     await Promise.all(pkgs.map(async (pkg) => {
-      pkg.version ??= `^${await getLatestPackageVersion(pkg)}`;
+      if (pkg instanceof JsrPackage) {
+        pkg.version ??= `^${await getLatestPackageVersion(pkg)}`;
+      }
     }));
     return toPackageArgs(pkgs);
   }
@@ -133,7 +141,7 @@ export class YarnBerry extends Yarn {
 class Pnpm implements PackageManager {
   constructor(public cwd: string) {}
 
-  async install(packages: JsrPackage[], options: InstallOptions) {
+  async install(packages: Package[], options: InstallOptions) {
     const args = ["add"];
     const mode = modeToFlag(options.mode);
     if (mode !== "") {
@@ -143,7 +151,7 @@ class Pnpm implements PackageManager {
     await execWithLog("pnpm", args, this.cwd);
   }
 
-  async remove(packages: JsrPackage[]) {
+  async remove(packages: Package[]) {
     await execWithLog(
       "yarn",
       ["remove", ...packages.map((pkg) => pkg.toString())],
@@ -159,7 +167,7 @@ class Pnpm implements PackageManager {
 export class Bun implements PackageManager {
   constructor(public cwd: string) {}
 
-  async install(packages: JsrPackage[], options: InstallOptions) {
+  async install(packages: Package[], options: InstallOptions) {
     const args = ["add"];
     const mode = modeToFlagYarn(options.mode);
     if (mode !== "") {
@@ -169,7 +177,7 @@ export class Bun implements PackageManager {
     await execWithLog("bun", args, this.cwd);
   }
 
-  async remove(packages: JsrPackage[]) {
+  async remove(packages: Package[]) {
     await execWithLog(
       "bun",
       ["remove", ...packages.map((pkg) => pkg.toString())],

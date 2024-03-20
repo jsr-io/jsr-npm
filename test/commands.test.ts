@@ -259,6 +259,73 @@ describe("install", () => {
     });
   });
 
+  describe("jsr i --from-jsr-config", () => {
+    it("throws if packages passed", async () => {
+      await runInTempDir(async (dir) => {
+        try {
+          await runJsr(["i", "--from-jsr-config", "@std/encoding"], dir);
+          assert.fail();
+        } catch (err) {
+          assert.ok(err instanceof ExecError, `Unknown exec error thrown`);
+        }
+      });
+    });
+
+    it("throws if no jsr.json or jsr.jsonc is found", async () => {
+      await runInTempDir(async (dir) => {
+        try {
+          await runJsr(["i", "--from-jsr-config"], dir);
+          assert.fail();
+        } catch (err) {
+          assert.ok(err instanceof ExecError, `Unknown exec error thrown`);
+        }
+      });
+
+      // Should not throw when one is present
+      for (const file of ["jsr.json", "jsr.jsonc", "deno.json", "deno.jsonc"]) {
+        await runInTempDir(async (dir) => {
+          await writeJson(path.join(dir, file), {});
+          await runJsr(["i", "--from-jsr-config"], dir);
+        });
+      }
+    }).timeout(600000);
+
+    it("installs packages from jsr.json", async () => {
+      for (const file of ["jsr.json", "jsr.jsonc", "deno.json", "deno.jsonc"]) {
+        await runInTempDir(async (dir) => {
+          await writeJson(path.join(dir, file), {
+            imports: {
+              "@std/encoding": "jsr:@std/encoding@^0.216.0",
+              "preact": "npm:preact@10.20.0",
+            },
+          });
+          await runJsr(["i", "--from-jsr-config"], dir);
+
+          const pkgJson = await readJson<PkgJson>(
+            path.join(dir, "package.json"),
+          );
+          assert.ok(
+            pkgJson.dependencies && "@std/encoding" in pkgJson.dependencies,
+            "Missing dependency entry",
+          );
+          assert.ok(
+            pkgJson.dependencies && "preact" in pkgJson.dependencies,
+            "Missing dependency entry",
+          );
+
+          assert.match(
+            pkgJson.dependencies["@std/encoding"],
+            /^npm:@jsr\/std__encoding@\^\d+\.\d+\.\d+.*$/,
+          );
+          assert.match(
+            pkgJson.dependencies["preact"],
+            /^\^\d+\.\d+\.\d+.*$/,
+          );
+        });
+      }
+    }).timeout(600000);
+  });
+
   it("jsr add --npm @std/encoding@0.216.0 - forces npm", async () => {
     await withTempEnv(
       ["i", "--npm", "@std/encoding@0.216.0"],

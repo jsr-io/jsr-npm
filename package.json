@@ -46,6 +46,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
+    "jsonc-parser": "^3.2.1",
     "kolorist": "^1.8.0",
     "node-stream-zip": "^1.15.0"
   }

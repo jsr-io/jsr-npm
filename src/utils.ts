@@ -245,6 +245,7 @@ export interface PkgJson {
   name?: string;
   version?: string;
   license?: string;
+  type?: "module" | "commonjs";
 
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;

@@ -16,8 +16,11 @@ import {
   findProjectDir,
   JsrPackage,
   JsrPackageNameError,
+  PkgJson,
   prettyTime,
+  readJson,
   setDebug,
+  writeJson,
 } from "./utils";
 import { PkgManagerName } from "./pkg_manager";
 
@@ -212,6 +215,21 @@ if (args.length === 0) {
     if (cmd === "i" || cmd === "install" || cmd === "add") {
       run(async () => {
         const packages = getPackages(options.positionals, true);
+        const projectInfo = await findProjectDir(process.cwd());
+
+        if (projectInfo.pkgJsonPath !== null) {
+          const pkgJson = await readJson<PkgJson>(projectInfo.pkgJsonPath);
+          if (pkgJson.type !== "module") {
+            pkgJson.type = "module";
+            await writeJson(
+              projectInfo.pkgJsonPath,
+              pkgJson,
+            );
+            console.log(
+              `Setting type:module in package.json...${kl.green("ok")}`,
+            );
+          }
+        }
 
         await install(packages, {
           mode: options.values["save-dev"]

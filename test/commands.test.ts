@@ -35,6 +35,8 @@ describe("install", () => {
         /^npm:@jsr\/std__encoding@\^\d+\.\d+\.\d+.*$/,
       );
 
+      assert.equal(pkgJson.type, "module");
+
       const depPath = path.join(dir, "node_modules", "@std", "encoding");
       assert.ok(await isDirectory(depPath), "Not installed in node_modules");
 
@@ -45,7 +47,9 @@ describe("install", () => {
         "Missing npmrc registry",
       );
     });
+  });
 
+  it("jsr i @std/encoding - resolve latest version in yarn berry", async () => {
     await runInTempDir(async (dir) => {
       await enableYarnBerry(dir);
       await writeTextFile(path.join(dir, "yarn.lock"), "");

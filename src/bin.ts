@@ -12,11 +12,15 @@ import {
   showPackageInfo,
 } from "./commands";
 import {
+  DenoJson,
   ExecError,
   findProjectDir,
   JsrPackage,
   JsrPackageNameError,
+  NpmPackage,
+  Package,
   prettyTime,
+  readJson,
   setDebug,
 } from "./utils";
 import { PkgManagerName } from "./pkg_manager";
@@ -74,6 +78,10 @@ ${
       ["--yarn", "Use yarn to remove and install packages."],
       ["--pnpm", "Use pnpm to remove and install packages."],
       ["--bun", "Use bun to remove and install packages."],
+      [
+        "--from-jsr-config",
+        "Install 'jsr:*' and 'npm:*' packages from jsr config file as npm packages.",
+      ],
       ["--verbose", "Show additional debugging information."],
       ["-h, --help", "Show this help text."],
       ["-v, --version", "Print the version number."],
@@ -174,6 +182,7 @@ if (args.length === 0) {
         "save-optional": { type: "boolean", default: false, short: "O" },
         "dry-run": { type: "boolean", default: false },
         "allow-slow-types": { type: "boolean", default: false },
+        "from-jsr-config": { type: "boolean", default: false },
         token: { type: "string" },
         config: { type: "string", short: "c" },
         "no-config": { type: "boolean" },
@@ -211,7 +220,39 @@ if (args.length === 0) {
 
     if (cmd === "i" || cmd === "install" || cmd === "add") {
       run(async () => {
-        const packages = getPackages(options.positionals, true);
+        const packages: Package[] = getPackages(options.positionals, true);
+        if (options.values["from-jsr-config"]) {
+          if (packages.length > 0) {
+            console.error(
+              kl.red(
+                "The flag '--from-jsr-config' cannot be used when package names are passed to the install command.",
+              ),
+            );
+            process.exit(1);
+          }
+
+          const projectInfo = await findProjectDir(process.cwd());
+          const jsrFile = projectInfo.jsrJsonPath || projectInfo.denoJsonPath;
+          if (jsrFile === null) {
+            console.error(
+              `Could not find either jsr.json, jsr.jsonc, deno.json or deno.jsonc file in the project.`,
+            );
+            process.exit(1);
+          }
+
+          const json = await readJson<DenoJson>(jsrFile);
+          if (json.imports !== null && typeof json.imports === "object") {
+            for (const specifier of Object.values(json.imports)) {
+              if (specifier.startsWith("jsr:")) {
+                const raw = specifier.slice("jsr:".length);
+                packages.push(JsrPackage.from(raw));
+              } else if (specifier.startsWith("npm:")) {
+                const raw = specifier.slice("npm:".length);
+                packages.push(NpmPackage.from(raw));
+              }
+            }
+          }
+        }
 
         await install(packages, {
           mode: options.values["save-dev"]

@@ -7,6 +7,7 @@ import {
   fileExists,
   getNewLineChars,
   JsrPackage,
+  Package,
   timeAgo,
 } from "./utils";
 import { Bun, getPkgManager, PkgManagerName, YarnBerry } from "./pkg_manager";
@@ -86,10 +87,10 @@ export interface InstallOptions extends BaseOptions {
   mode: "dev" | "prod" | "optional";
 }
 
-export async function install(packages: JsrPackage[], options: InstallOptions) {
+export async function install(packages: Package[], options: InstallOptions) {
   const pkgManager = await getPkgManager(process.cwd(), options.pkgManagerName);
 
-  if (packages.length > 0) {
+  if (packages.some((pkg) => pkg instanceof JsrPackage)) {
     if (pkgManager instanceof Bun) {
       // Bun doesn't support reading from .npmrc yet
       await setupBunfigToml(pkgManager.cwd);

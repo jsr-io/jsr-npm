@@ -44,8 +44,8 @@ describe("NpmPackage", () => {
       NpmPackage.from("@foo-bar/foo-bar").toString(),
       "@foo-bar/foo-bar",
     );
-    assert.equal(
-      NpmPackage.from("@foo-bar@1.0.0").toString(),
+    assert.throws(
+      () => NpmPackage.from("@foo-bar@1.0.0").toString(),
       "@foo-bar@1.0.0",
     );
     assert.equal(

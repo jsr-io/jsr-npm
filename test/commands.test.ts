@@ -101,6 +101,79 @@ describe("install", () => {
     });
   });
 
+  it("jsr i @std/encoding - inside workspace member", async () => {
+    await runInTempDir(async (dir) => {
+      const parentPkgJson = { name: "", private: true, workspaces: ["sub"] };
+      const parentPkgJsonPath = path.join(dir, "package.json");
+      await writeJson<PkgJson>(parentPkgJsonPath, parentPkgJson);
+
+      // Create sub folder with package.json
+      const subPkgJsonPath = path.join(dir, "sub", "package.json");
+      await writeJson(subPkgJsonPath, { name: "foo" });
+
+      await runJsr(["i", "@std/encoding"], path.join(dir, "sub"));
+
+      assert.deepEqual(
+        await readJson<PkgJson>(path.join(dir, "package.json")),
+        parentPkgJson,
+      );
+
+      const pkgJson = await readJson<PkgJson>(subPkgJsonPath);
+      assert.ok(
+        pkgJson.dependencies && "@std/encoding" in pkgJson.dependencies,
+        "Missing dependency entry",
+      );
+
+      assert.match(
+        pkgJson.dependencies["@std/encoding"],
+        /^npm:@jsr\/std__encoding@\^\d+\.\d+\.\d+.*$/,
+      );
+
+      const npmRc = await readTextFile(path.join(dir, ".npmrc"));
+      assert.ok(
+        npmRc.includes("@jsr:registry=https://npm.jsr.io"),
+        "Missing npmrc registry",
+      );
+    });
+  });
+
+  it("jsr i @std/encoding - inside pnpm workspace member", async () => {
+    await runInTempDir(async (dir) => {
+      const parentPkgJson = { name: "", private: true };
+      const parentPkgJsonPath = path.join(dir, "package.json");
+      await writeJson<PkgJson>(parentPkgJsonPath, parentPkgJson);
+      await writeTextFile(path.join(dir, "pnpm-workspace.yaml"), "");
+
+      // Create sub folder with package.json
+      const subPkgJsonPath = path.join(dir, "sub", "package.json");
+      await writeJson(subPkgJsonPath, { name: "foo" });
+
+      await runJsr(["i", "--pnpm", "@std/encoding"], path.join(dir, "sub"));
+
+      assert.deepEqual(
+        await readJson<PkgJson>(path.join(dir, "package.json")),
+        parentPkgJson,
+      );
+
+      const pkgJson = await readJson<PkgJson>(subPkgJsonPath);
+      assert.ok(
+        pkgJson.dependencies && "@std/encoding" in pkgJson.dependencies,
+        "Missing dependency entry",
+      );
+
+      assert.match(
+        pkgJson.dependencies["@std/encoding"],
+        /^npm:@jsr\/std__encoding@\^\d+\.\d+\.\d+.*$/,
+      );
+
+      const npmRc = await readTextFile(path.join(dir, ".npmrc"));
+      assert.ok(
+        npmRc.includes("@jsr:registry=https://npm.jsr.io"),
+        "Missing npmrc registry",
+      );
+    });
+  });
+
   it("jsr i @std/encoding@0.216.0 - with version", async () => {
     await withTempEnv(["i", "@std/encoding@0.216.0"], async (dir) => {
       const pkgJson = await readJson<PkgJson>(path.join(dir, "package.json"));

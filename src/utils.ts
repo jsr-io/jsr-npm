@@ -72,6 +72,7 @@ export interface ProjectInfo {
   projectDir: string;
   pkgManagerName: PkgManagerName | null;
   pkgJsonPath: string | null;
+  root: string | null;
 }
 export async function findProjectDir(
   cwd: string,
@@ -80,6 +81,7 @@ export async function findProjectDir(
     projectDir: cwd,
     pkgManagerName: null,
     pkgJsonPath: null,
+    root: null,
   },
 ): Promise<ProjectInfo> {
   // Ensure we check for `package.json` first as this defines
@@ -91,6 +93,18 @@ export async function findProjectDir(
       logDebug(`Setting project directory to ${dir}`);
       result.projectDir = dir;
       result.pkgJsonPath = pkgJsonPath;
+    }
+  } else {
+    const pkgJsonPath = path.join(dir, "package.json");
+    if (await fileExists(pkgJsonPath)) {
+      const json = await readJson<PkgJson>(pkgJsonPath);
+      // npm + yarn + bun workspaces
+      if (Array.isArray(json.workspaces)) {
+        result.root = dir;
+      } // pnpm workspaces
+      else if (await fileExists(path.join(dir, "pnpm-workspace.yaml"))) {
+        result.root = dir;
+      }
     }
   }
 
@@ -245,6 +259,7 @@ export interface PkgJson {
   name?: string;
   version?: string;
   license?: string;
+  workspaces?: string[];
 
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;

@@ -87,12 +87,15 @@ export interface InstallOptions extends BaseOptions {
 }
 
 export async function install(packages: JsrPackage[], options: InstallOptions) {
-  const pkgManager = await getPkgManager(process.cwd(), options.pkgManagerName);
+  const { pkgManager, root } = await getPkgManager(
+    process.cwd(),
+    options.pkgManagerName,
+  );
 
   if (packages.length > 0) {
     if (pkgManager instanceof Bun) {
       // Bun doesn't support reading from .npmrc yet
-      await setupBunfigToml(pkgManager.cwd);
+      await setupBunfigToml(root);
     } else if (pkgManager instanceof YarnBerry) {
       // Yarn v2+ does not read from .npmrc intentionally
       // https://yarnpkg.com/migration/guide#update-your-configuration-to-the-new-settings
@@ -101,7 +104,7 @@ export async function install(packages: JsrPackage[], options: InstallOptions) {
         JSR_NPM_REGISTRY_URL,
       );
     } else {
-      await setupNpmRc(pkgManager.cwd);
+      await setupNpmRc(root);
     }
 
     console.log(`Installing ${kl.cyan(packages.join(", "))}...`);
@@ -111,7 +114,10 @@ export async function install(packages: JsrPackage[], options: InstallOptions) {
 }
 
 export async function remove(packages: JsrPackage[], options: BaseOptions) {
-  const pkgManager = await getPkgManager(process.cwd(), options.pkgManagerName);
+  const { pkgManager } = await getPkgManager(
+    process.cwd(),
+    options.pkgManagerName,
+  );
   console.log(`Removing ${kl.cyan(packages.join(", "))}...`);
   await pkgManager.remove(packages);
 }
@@ -186,7 +192,7 @@ export async function runScript(
   script: string,
   options: BaseOptions,
 ) {
-  const pkgManager = await getPkgManager(cwd, options.pkgManagerName);
+  const { pkgManager } = await getPkgManager(cwd, options.pkgManagerName);
   await pkgManager.runScript(script);
 }
 

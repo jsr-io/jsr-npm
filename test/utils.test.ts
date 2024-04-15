@@ -1,7 +1,12 @@
 import * as assert from "assert/strict";
 import * as path from "node:path";
 import { runInTempDir } from "./test_utils";
-import { findProjectDir, writeJson, writeTextFile } from "../src/utils";
+import {
+  findProjectDir,
+  PkgJson,
+  writeJson,
+  writeTextFile,
+} from "../src/utils";
 
 describe("findProjectDir", () => {
   it("should return npm if package-lock.json is found", async () => {
@@ -55,6 +60,37 @@ describe("findProjectDir", () => {
       await writeJson(path.join(sub, "package.json"), {});
       const result = await findProjectDir(sub);
       assert.strictEqual(result.projectDir, sub);
+    });
+  });
+
+  it("should find workspace root folder", async () => {
+    await runInTempDir(async (tempDir) => {
+      const sub = path.join(tempDir, "sub");
+
+      await writeJson<PkgJson>(path.join(tempDir, "package.json"), {
+        workspaces: ["sub"],
+      });
+      await writeJson(path.join(sub, "package.json"), {});
+      const result = await findProjectDir(sub);
+      assert.strictEqual(
+        result.root,
+        tempDir,
+      );
+    });
+  });
+
+  it("should find workspace root folder with pnpm workspaces", async () => {
+    await runInTempDir(async (tempDir) => {
+      const sub = path.join(tempDir, "sub");
+
+      await writeJson<PkgJson>(path.join(tempDir, "package.json"), {});
+      await writeJson(path.join(sub, "package.json"), {});
+      await writeTextFile(path.join(tempDir, "pnpm-workspace.yaml"), "");
+      const result = await findProjectDir(sub);
+      assert.strictEqual(
+        result.root,
+        tempDir,
+      );
     });
   });
 });

@@ -195,27 +195,32 @@ function getPkgManagerFromEnv(value: string): PkgManagerName | null {
 export async function getPkgManager(
   cwd: string,
   pkgManagerName: PkgManagerName | null,
-) {
+): Promise<{ root: string; pkgManager: PackageManager }> {
   const envPkgManager = process.env.npm_config_user_agent;
   const fromEnv = envPkgManager !== undefined
     ? getPkgManagerFromEnv(envPkgManager)
     : null;
 
-  const { projectDir, pkgManagerName: fromLockfile } = await findProjectDir(
-    cwd,
-  );
+  const { projectDir, pkgManagerName: fromLockfile, root } =
+    await findProjectDir(
+      cwd,
+    );
+  const rootPath = root || projectDir;
 
   const result = pkgManagerName || fromEnv || fromLockfile || "npm";
 
+  let pkgManager: PackageManager;
   if (result === "yarn") {
-    return await isYarnBerry(projectDir)
+    pkgManager = await isYarnBerry(projectDir)
       ? new YarnBerry(projectDir)
       : new Yarn(projectDir);
   } else if (result === "pnpm") {
-    return new Pnpm(projectDir);
+    pkgManager = new Pnpm(projectDir);
   } else if (result === "bun") {
-    return new Bun(projectDir);
+    pkgManager = new Bun(projectDir);
+  } else {
+    pkgManager = new Npm(projectDir);
   }
 
-  return new Npm(projectDir);
+  return { root: rootPath, pkgManager };
 }

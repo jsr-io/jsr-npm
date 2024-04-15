@@ -145,7 +145,7 @@ class Pnpm implements PackageManager {
 
   async remove(packages: JsrPackage[]) {
     await execWithLog(
-      "yarn",
+      "pnpm",
       ["remove", ...packages.map((pkg) => pkg.toString())],
       this.cwd,
     );

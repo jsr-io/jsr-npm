@@ -182,7 +182,7 @@ export async function publish(cwd: string, options: PublishOptions) {
     env.DENO_DISABLE_PEDANTIC_NODE_WARNINGS = "true";
   }
 
-  args.push(...options.publishArgs);
+  args.push(...options.publishArgs.filter((arg) => arg !== "--verbose"));
 
   await exec(binPath, args, cwd, env);
 }

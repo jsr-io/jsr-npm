@@ -249,11 +249,10 @@ if (args.length === 0) {
             await runScript(process.cwd(), cmd, { pkgManagerName });
           });
         } else {
-          console.error(kl.red(`Unknown command: ${cmd}`));
-          console.log();
-          printHelp();
-          process.exit(1);
+          throwUnknownCommand(cmd);
         }
+      } else {
+        throwUnknownCommand(cmd);
       }
     }
   }
@@ -277,4 +276,11 @@ async function run(fn: () => Promise<void>) {
 
     throw err;
   }
+}
+
+function throwUnknownCommand(cmd: string) {
+  console.error(kl.red(`Unknown command: ${cmd}`));
+  console.log();
+  printHelp();
+  process.exit(1);
 }

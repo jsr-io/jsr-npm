@@ -21,6 +21,39 @@ import {
   writeTextFile,
 } from "../src/utils";
 
+describe("general", () => {
+  it("exit 1 on unknown command", async () => {
+    try {
+      await withTempEnv(["foo"], async () => {});
+      assert.fail("no");
+    } catch (err) {
+      if (err instanceof Error) {
+        assert.match(err.message, /Child process/);
+        assert.equal((err as any).code, 1);
+      } else {
+        throw err;
+      }
+    }
+  });
+
+  // See https://github.com/jsr-io/jsr-npm/issues/79
+  it("exit 1 on unknown command in empty folder", async () => {
+    await runInTempDir(async (dir) => {
+      try {
+        await runJsr(["asdf"], dir);
+        assert.fail("no");
+      } catch (err) {
+        if (err instanceof Error) {
+          assert.match(err.message, /Child process/);
+          assert.equal((err as any).code, 1);
+        } else {
+          throw err;
+        }
+      }
+    });
+  });
+});
+
 describe("install", () => {
   it("jsr i @std/encoding - resolve latest version", async () => {
     await withTempEnv(["i", "@std/encoding"], async (dir) => {

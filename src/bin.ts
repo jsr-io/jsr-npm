@@ -240,7 +240,7 @@ if (args.length === 0) {
       });
     } else {
       const packageJsonPath = path.join(process.cwd(), "package.json");
-      if (fs.existsSync(packageJsonPath)) {
+      scripts: if (fs.existsSync(packageJsonPath)) {
         const packageJson = JSON.parse(
           fs.readFileSync(packageJsonPath, "utf-8"),
         );
@@ -249,12 +249,14 @@ if (args.length === 0) {
             await runScript(process.cwd(), cmd, { pkgManagerName });
           });
         } else {
-          console.error(kl.red(`Unknown command: ${cmd}`));
-          console.log();
-          printHelp();
-          process.exit(1);
+          break scripts;
         }
       }
+
+      console.error(kl.red(`Unknown command: ${cmd}`));
+      console.log();
+      printHelp();
+      process.exit(1);
     }
   }
 }

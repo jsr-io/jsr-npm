@@ -21,7 +21,7 @@ import {
   writeTextFile,
 } from "../src/utils";
 
-describe.only("general", () => {
+describe("general", () => {
   it("exit 1 on unknown command", async () => {
     try {
       await withTempEnv(["foo"], async () => {});

@@ -240,7 +240,7 @@ if (args.length === 0) {
       });
     } else {
       const packageJsonPath = path.join(process.cwd(), "package.json");
-      scripts: if (fs.existsSync(packageJsonPath)) {
+      if (fs.existsSync(packageJsonPath)) {
         const packageJson = JSON.parse(
           fs.readFileSync(packageJsonPath, "utf-8"),
         );
@@ -249,14 +249,11 @@ if (args.length === 0) {
             await runScript(process.cwd(), cmd, { pkgManagerName });
           });
         } else {
-          break scripts;
+          throwUnknownCommand(cmd);
         }
+      } else {
+        throwUnknownCommand(cmd);
       }
-
-      console.error(kl.red(`Unknown command: ${cmd}`));
-      console.log();
-      printHelp();
-      process.exit(1);
     }
   }
 }
@@ -279,4 +276,11 @@ async function run(fn: () => Promise<void>) {
 
     throw err;
   }
+}
+
+function throwUnknownCommand(cmd: string) {
+  console.error(kl.red(`Unknown command: ${cmd}`));
+  console.log();
+  printHelp();
+  process.exit(1);
 }

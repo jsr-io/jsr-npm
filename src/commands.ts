@@ -12,6 +12,7 @@ import {
 import { Bun, getPkgManager, PkgManagerName, YarnBerry } from "./pkg_manager";
 import { downloadDeno, getDenoDownloadUrl } from "./download";
 import { getNpmPackageInfo, getPackageMeta } from "./api";
+import semiver from "semiver";
 
 const NPMRC_FILE = ".npmrc";
 const BUNFIG_FILE = "bunfig.toml";
@@ -201,10 +202,23 @@ export async function showPackageInfo(raw: string) {
 
   const meta = await getPackageMeta(pkg);
   if (pkg.version === null) {
-    if (meta.latest === undefined) {
+    let latest = meta.latest;
+    if (latest === undefined) {
       throw new Error(`Missing latest version for ${pkg}`);
+    } else if (latest === null) {
+      // When no stable version is published: `latest === null`. We need to
+      // manually find the latest pre-release version
+      const versions = Object.keys(meta.versions);
+
+      if (versions.length === 0) {
+        throw new Error(`Could not find published version for ${pkg}`);
+      }
+
+      versions.sort(semiver);
+      pkg.version = versions[0];
+    } else {
+      pkg.version = latest;
     }
-    pkg.version = meta.latest!;
   }
 
   const versionCount = Object.keys(meta.versions).length;

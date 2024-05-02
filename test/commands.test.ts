@@ -788,4 +788,16 @@ describe("show", () => {
       process.cwd(),
     );
   });
+
+  it("should show package information for pre-release only packages", async () => {
+    const output = await runJsr(
+      ["show", "@fresh/update"],
+      process.cwd(),
+      undefined,
+      true,
+    );
+    const txt = kl.stripColors(output);
+    assert.ok(txt.includes("latest: -"));
+    assert.ok(txt.includes("npm tarball:"));
+  });
 });

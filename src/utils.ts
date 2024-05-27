@@ -14,8 +14,8 @@ export function logDebug(msg: string) {
   }
 }
 
-const EXTRACT_REG = /^@([a-z][a-z0-9-]+)\/([a-z0-9-]+)(@(.+))?$/;
-const EXTRACT_REG_PROXY = /^@jsr\/([a-z][a-z0-9-]+)__([a-z0-9-]+)(@(.+))?$/;
+const EXTRACT_REG = /^@([a-z0-9-]+)\/([a-z0-9-]+)(@(.+))?$/;
+const EXTRACT_REG_PROXY = /^@jsr\/([a-z0-9-]+)__([a-z0-9-]+)(@(.+))?$/;
 
 export class JsrPackageNameError extends Error {}
 

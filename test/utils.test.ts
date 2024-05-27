@@ -3,6 +3,7 @@ import * as path from "node:path";
 import { runInTempDir } from "./test_utils";
 import {
   findProjectDir,
+  JsrPackage,
   PkgJson,
   writeJson,
   writeTextFile,
@@ -92,5 +93,12 @@ describe("findProjectDir", () => {
         tempDir,
       );
     });
+  });
+});
+
+describe("JsrPackage", () => {
+  it("should allow scopes starting with a number", () => {
+    JsrPackage.from("@0abc/foo");
+    JsrPackage.from("@jsr/0abc__foo");
   });
 });

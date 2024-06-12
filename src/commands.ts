@@ -85,7 +85,7 @@ export async function setupBunfigToml(dir: string) {
   }
 }
 
-/** Sets up `@jsr` scope to map it to npm.jsr.io registry for various package managers. */
+/** Adds settings to map `@jsr` scope to https://npm.jsr.io registry for the given package manager */
 async function setupJsrScope(dir: string, pkgManager: PackageManager) {
   if (pkgManager instanceof Bun) {
     // Bun doesn't support reading from .npmrc yet

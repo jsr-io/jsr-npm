@@ -59,6 +59,10 @@ ${
       ["r, uninstall, remove", "Remove one or more JSR packages."],
       ["publish", "Publish a package to the JSR registry."],
       ["info, show, view", "Show package information."],
+      [
+        "setup",
+        "Set up the project for JSR. Add the settings for mapping @jsr scope to JSR registry.",
+      ],
     ])
   }
 

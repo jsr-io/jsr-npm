@@ -9,7 +9,13 @@ import {
   JsrPackage,
   timeAgo,
 } from "./utils";
-import { Bun, getPkgManager, PkgManagerName, YarnBerry } from "./pkg_manager";
+import {
+  Bun,
+  getPkgManager,
+  PackageManager,
+  PkgManagerName,
+  YarnBerry,
+} from "./pkg_manager";
 import { downloadDeno, getDenoDownloadUrl } from "./download";
 import { getNpmPackageInfo, getPackageMeta } from "./api";
 import semiver from "semiver";
@@ -79,6 +85,23 @@ export async function setupBunfigToml(dir: string) {
   }
 }
 
+/** Sets up `@jsr` scope to map it to npm.jsr.io registry for various package managers. */
+async function setupJsrScope(dir: string, pkgManager: PackageManager) {
+  if (pkgManager instanceof Bun) {
+    // Bun doesn't support reading from .npmrc yet
+    await setupBunfigToml(dir);
+  } else if (pkgManager instanceof YarnBerry) {
+    // Yarn v2+ does not read from .npmrc intentionally
+    // https://yarnpkg.com/migration/guide#update-your-configuration-to-the-new-settings
+    await pkgManager.setConfigValue(
+      JSR_YARN_BERRY_CONFIG_KEY,
+      JSR_NPM_REGISTRY_URL,
+    );
+  } else {
+    await setupNpmRc(dir);
+  }
+}
+
 export interface BaseOptions {
   pkgManagerName: PkgManagerName | null;
 }
@@ -94,24 +117,20 @@ export async function install(packages: JsrPackage[], options: InstallOptions) {
   );
 
   if (packages.length > 0) {
-    if (pkgManager instanceof Bun) {
-      // Bun doesn't support reading from .npmrc yet
-      await setupBunfigToml(root);
-    } else if (pkgManager instanceof YarnBerry) {
-      // Yarn v2+ does not read from .npmrc intentionally
-      // https://yarnpkg.com/migration/guide#update-your-configuration-to-the-new-settings
-      await pkgManager.setConfigValue(
-        JSR_YARN_BERRY_CONFIG_KEY,
-        JSR_NPM_REGISTRY_URL,
-      );
-    } else {
-      await setupNpmRc(root);
-    }
-
+    await setupJsrScope(root, pkgManager);
     console.log(`Installing ${kl.cyan(packages.join(", "))}...`);
   }
 
   await pkgManager.install(packages, options);
+}
+
+export async function setup(options: BaseOptions) {
+  const { pkgManager, root } = await getPkgManager(
+    process.cwd(),
+    options.pkgManagerName,
+  );
+
+  await setupJsrScope(root, pkgManager);
 }
 
 export async function remove(packages: JsrPackage[], options: BaseOptions) {

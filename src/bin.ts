@@ -9,6 +9,7 @@ import {
   publish,
   remove,
   runScript,
+  setup,
   showPackageInfo,
 } from "./commands";
 import {
@@ -237,6 +238,10 @@ if (args.length === 0) {
       }
       run(async () => {
         await runScript(process.cwd(), script, { pkgManagerName });
+      });
+    } else if (cmd === "setup") {
+      run(async () => {
+        await setup({ pkgManagerName });
       });
     } else {
       const packageJsonPath = path.join(process.cwd(), "package.json");

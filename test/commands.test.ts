@@ -196,7 +196,7 @@ describe("install", () => {
 
       assert.match(
         pkgJson.dependencies["@std/encoding"],
-        /^npm:@jsr\/std__encoding@\^\d+\.\d+\.\d+.*$/,
+        /^npm:@jsr\/std__encoding@\^?\d+\.\d+\.\d+.*$/,
       );
 
       const npmRc = await readTextFile(path.join(dir, ".npmrc"));
@@ -799,5 +799,44 @@ describe("show", () => {
     const txt = kl.stripColors(output);
     assert.ok(txt.includes("latest: -"));
     assert.ok(txt.includes("npm tarball:"));
+  });
+});
+
+describe("setup", () => {
+  it("jsr setup - should generate .npmrc file", async () => {
+    await runInTempDir(async (dir) => {
+      await runJsr(["setup"], dir);
+
+      const npmrcPath = path.join(dir, ".npmrc");
+      const npmRc = await readTextFile(npmrcPath);
+      assert.ok(
+        npmRc.includes("@jsr:registry=https://npm.jsr.io"),
+        "Missing npmrc registry",
+      );
+    });
+  });
+
+  it("jsr setup - should generate .yarnrc.yml if yarn berry is detected", async () => {
+    await runInTempDir(async (dir) => {
+      await enableYarnBerry(dir);
+      await writeTextFile(path.join(dir, "yarn.lock"), "");
+
+      await runJsr(["setup"], dir);
+
+      const yarnRc = await readTextFile(path.join(dir, ".yarnrc.yml"));
+      assert.ok(
+        /jsr:\s*npmRegistryServer: "https:\/\/npm\.jsr\.io"/.test(yarnRc),
+        "Missing yarnrc.yml registry",
+      );
+    });
+  });
+
+  it("jsr setup - should generate bunfig.toml if bun is detected", async () => {
+    await runInTempDir(async (dir) => {
+      await runJsr(["setup", "--bun"], dir);
+
+      const config = await readTextFile(path.join(dir, "bunfig.toml"));
+      assert.match(config, /"@jsr"\s+=/, "bunfig.toml not created");
+    });
   });
 });

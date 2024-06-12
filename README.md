@@ -47,6 +47,8 @@ commands.
 - `publish`: Publish `package.json` libraries to JSR.
 - `run <script>`: Run a JSR package script.
 - `<script>`: Run a JSR package script without `run` command.
+- `setup`: Set up the project for JSR. Add the settings for mapping @jsr scope
+  to JSR registry.
 
 ## Limitations
 

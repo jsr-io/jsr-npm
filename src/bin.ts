@@ -9,6 +9,7 @@ import {
   publish,
   remove,
   runScript,
+  setup,
   showPackageInfo,
 } from "./commands";
 import {
@@ -58,6 +59,10 @@ ${
       ["r, uninstall, remove", "Remove one or more JSR packages."],
       ["publish", "Publish a package to the JSR registry."],
       ["info, show, view", "Show package information."],
+      [
+        "setup",
+        "Set up the project for JSR. Add the settings for mapping @jsr scope to JSR registry.",
+      ],
     ])
   }
 
@@ -237,6 +242,10 @@ if (args.length === 0) {
       }
       run(async () => {
         await runScript(process.cwd(), script, { pkgManagerName });
+      });
+    } else if (cmd === "setup") {
+      run(async () => {
+        await setup({ pkgManagerName });
       });
     } else {
       const packageJsonPath = path.join(process.cwd(), "package.json");

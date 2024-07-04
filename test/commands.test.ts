@@ -4,6 +4,7 @@ import * as kl from "kolorist";
 import {
   DenoJson,
   enableYarnBerry,
+  isBunSupportNpmrc,
   isDirectory,
   isFile,
   runInTempDir,
@@ -443,8 +444,17 @@ describe("install", () => {
             "bun lockfile not created",
           );
 
-          const config = await readTextFile(path.join(dir, "bunfig.toml"));
-          assert.match(config, /"@jsr"\s+=/, "bunfig.toml not created");
+          if (await isBunSupportNpmrc(dir)) {
+            const npmrcPath = path.join(dir, ".npmrc");
+            const npmRc = await readTextFile(npmrcPath);
+            assert.ok(
+              npmRc.includes("@jsr:registry=https://npm.jsr.io"),
+              "Missing npmrc registry",
+            );
+          } else {
+            const config = await readTextFile(path.join(dir, "bunfig.toml"));
+            assert.match(config, /"@jsr"\s+=/, "bunfig.toml not created");
+          }
         },
       );
     });
@@ -453,8 +463,18 @@ describe("install", () => {
         ["i", "--bun", "@std/encoding@0.216.0"],
         async (dir) => {
           await runJsr(["i", "--bun", "@std/encoding@0.216.0"], dir);
-          const config = await readTextFile(path.join(dir, "bunfig.toml"));
-          assert.match(config, /"@jsr"\s+=/, "bunfig.toml not created");
+
+          if (await isBunSupportNpmrc(dir)) {
+            const npmrcPath = path.join(dir, ".npmrc");
+            const npmRc = await readTextFile(npmrcPath);
+            assert.ok(
+              npmRc.includes("@jsr:registry=https://npm.jsr.io"),
+              "Missing npmrc registry",
+            );
+          } else {
+            const config = await readTextFile(path.join(dir, "bunfig.toml"));
+            assert.match(config, /"@jsr"\s+=/, "bunfig.toml not created");
+          }
         },
       );
     });

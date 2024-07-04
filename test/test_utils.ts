@@ -1,6 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
+import semiver from "semiver";
 import { exec, writeJson } from "../src/utils";
 
 export interface DenoJson {
@@ -30,6 +31,12 @@ export async function runJsr(
     npm_config_user_agent: undefined,
     ...env,
   }, captureOutput);
+}
+
+export async function isBunSupportNpmrc(cwd: string) {
+  const version = await exec("bun", ["--version"], cwd, undefined, true);
+  // bun v1.1.18 supports npmrc https://bun.sh/blog/bun-v1.1.18#npmrc-support
+  return version != null && semiver(version, "1.1.18") >= 0;
 }
 
 export async function runInTempDir(fn: (dir: string) => Promise<void>) {

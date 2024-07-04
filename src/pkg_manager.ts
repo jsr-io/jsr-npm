@@ -3,6 +3,7 @@ import { getLatestPackageVersion } from "./api";
 import { InstallOptions } from "./commands";
 import { exec, findProjectDir, JsrPackage, logDebug } from "./utils";
 import * as kl from "kolorist";
+import semiver from "semiver";
 
 async function execWithLog(cmd: string, args: string[], cwd: string) {
   console.log(kl.dim(`$ ${cmd} ${args.join(" ")}`));
@@ -180,6 +181,12 @@ export class Bun implements PackageManager {
 
   async runScript(script: string) {
     await execWithLog("bun", ["run", script], this.cwd);
+  }
+
+  async isNpmrcSupported() {
+    const version = await exec("bun", ["--version"], this.cwd, undefined, true);
+    // bun v1.1.18 supports npmrc https://bun.sh/blog/bun-v1.1.18#npmrc-support
+    return version != null && semiver(version, "1.1.18") >= 0;
   }
 }
 

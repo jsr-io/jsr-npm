@@ -1,7 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
-import semiver from "semiver";
 import { exec, writeJson } from "../src/utils";
 
 export interface DenoJson {

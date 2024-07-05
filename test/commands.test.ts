@@ -196,7 +196,7 @@ describe("install", () => {
 
       assert.match(
         pkgJson.dependencies["@std/encoding"],
-        /^npm:@jsr\/std__encoding@\^\d+\.\d+\.\d+.*$/,
+        /^npm:@jsr\/std__encoding@\d+\.\d+\.\d+.*$/,
       );
 
       const npmRc = await readTextFile(path.join(dir, ".npmrc"));
@@ -770,7 +770,7 @@ describe("show", () => {
       undefined,
       true,
     );
-    const txt = kl.stripColors(output);
+    const txt = kl.stripColors(output.combined);
     assert.ok(txt.includes("latest:"));
     assert.ok(txt.includes("npm tarball:"));
   });
@@ -796,7 +796,7 @@ describe("show", () => {
       undefined,
       true,
     );
-    const txt = kl.stripColors(output);
+    const txt = kl.stripColors(output.combined);
     assert.ok(txt.includes("latest: -"));
     assert.ok(txt.includes("npm tarball:"));
   });

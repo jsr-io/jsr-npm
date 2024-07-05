@@ -94,8 +94,10 @@ export async function install(packages: JsrPackage[], options: InstallOptions) {
   );
 
   if (packages.length > 0) {
-    if (pkgManager instanceof Bun) {
-      // Bun doesn't support reading from .npmrc yet
+    if (pkgManager instanceof Bun && !(await pkgManager.isNpmrcSupported())) {
+      // Bun v1.1.17 or lower doesn't support reading from .npmrc
+      // Bun v1.1.18+ supports npmrc
+      // https://bun.sh/blog/bun-v1.1.18#npmrc-support
       await setupBunfigToml(root);
     } else if (pkgManager instanceof YarnBerry) {
       // Yarn v2+ does not read from .npmrc intentionally

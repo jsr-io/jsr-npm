@@ -20,6 +20,7 @@ import {
   writeJson,
   writeTextFile,
 } from "../src/utils";
+import { Bun } from "../src/pkg_manager";
 
 describe("general", () => {
   it("exit 1 on unknown command", async () => {
@@ -443,8 +444,19 @@ describe("install", () => {
             "bun lockfile not created",
           );
 
-          const config = await readTextFile(path.join(dir, "bunfig.toml"));
-          assert.match(config, /"@jsr"\s+=/, "bunfig.toml not created");
+          const bun = new Bun(dir);
+
+          if (await bun.isNpmrcSupported()) {
+            const npmrcPath = path.join(dir, ".npmrc");
+            const npmRc = await readTextFile(npmrcPath);
+            assert.ok(
+              npmRc.includes("@jsr:registry=https://npm.jsr.io"),
+              "Missing npmrc registry",
+            );
+          } else {
+            const config = await readTextFile(path.join(dir, "bunfig.toml"));
+            assert.match(config, /"@jsr"\s+=/, "bunfig.toml not created");
+          }
         },
       );
     });
@@ -453,8 +465,19 @@ describe("install", () => {
         ["i", "--bun", "@std/encoding@0.216.0"],
         async (dir) => {
           await runJsr(["i", "--bun", "@std/encoding@0.216.0"], dir);
-          const config = await readTextFile(path.join(dir, "bunfig.toml"));
-          assert.match(config, /"@jsr"\s+=/, "bunfig.toml not created");
+
+          const bun = new Bun(dir);
+          if (await bun.isNpmrcSupported()) {
+            const npmrcPath = path.join(dir, ".npmrc");
+            const npmRc = await readTextFile(npmrcPath);
+            assert.ok(
+              npmRc.includes("@jsr:registry=https://npm.jsr.io"),
+              "Missing npmrc registry",
+            );
+          } else {
+            const config = await readTextFile(path.join(dir, "bunfig.toml"));
+            assert.match(config, /"@jsr"\s+=/, "bunfig.toml not created");
+          }
         },
       );
     });

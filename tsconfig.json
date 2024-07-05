@@ -6,7 +6,8 @@
     "outDir": "dist/",
     "declaration": true,
     "sourceMap": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "esModuleInterop": true
   },
   "include": ["src"]
 }

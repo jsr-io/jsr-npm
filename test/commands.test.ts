@@ -4,7 +4,6 @@ import * as kl from "kolorist";
 import {
   DenoJson,
   enableYarnBerry,
-  isBunSupportNpmrc,
   isDirectory,
   isFile,
   runInTempDir,
@@ -21,6 +20,7 @@ import {
   writeJson,
   writeTextFile,
 } from "../src/utils";
+import { Bun } from "../src/pkg_manager";
 
 describe("general", () => {
   it("exit 1 on unknown command", async () => {
@@ -444,7 +444,9 @@ describe("install", () => {
             "bun lockfile not created",
           );
 
-          if (await isBunSupportNpmrc(dir)) {
+          const bun = new Bun(dir);
+
+          if (await bun.isNpmrcSupported()) {
             const npmrcPath = path.join(dir, ".npmrc");
             const npmRc = await readTextFile(npmrcPath);
             assert.ok(
@@ -464,7 +466,8 @@ describe("install", () => {
         async (dir) => {
           await runJsr(["i", "--bun", "@std/encoding@0.216.0"], dir);
 
-          if (await isBunSupportNpmrc(dir)) {
+          const bun = new Bun(dir);
+          if (await bun.isNpmrcSupported()) {
             const npmrcPath = path.join(dir, ".npmrc");
             const npmRc = await readTextFile(npmrcPath);
             assert.ok(

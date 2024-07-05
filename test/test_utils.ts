@@ -33,12 +33,6 @@ export async function runJsr(
   }, captureOutput);
 }
 
-export async function isBunSupportNpmrc(cwd: string) {
-  const version = await exec("bun", ["--version"], cwd, undefined, true);
-  // bun v1.1.18 supports npmrc https://bun.sh/blog/bun-v1.1.18#npmrc-support
-  return version != null && semiver(version, "1.1.18") >= 0;
-}
-
 export async function runInTempDir(fn: (dir: string) => Promise<void>) {
   const dir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "jsr-cli"));
 

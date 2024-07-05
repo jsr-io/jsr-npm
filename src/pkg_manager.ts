@@ -184,7 +184,8 @@ export class Bun implements PackageManager {
   }
 
   async isNpmrcSupported() {
-    const version = await exec("bun", ["--version"], this.cwd, undefined, true);
+    const output = await exec("bun", ["--version"], this.cwd, undefined, true);
+    const version = output.stdout;
     // bun v1.1.18 supports npmrc https://bun.sh/blog/bun-v1.1.18#npmrc-support
     return version != null && semiver(version, "1.1.18") >= 0;
   }

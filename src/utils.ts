@@ -205,13 +205,19 @@ export class ExecError extends Error {
   }
 }
 
+export interface ExecOutput {
+  combined: string;
+  stdout: string;
+  stderr: string;
+}
+
 export async function exec(
   cmd: string,
   args: string[],
   cwd: string,
   env?: Record<string, string | undefined>,
   captureOutput?: boolean,
-) {
+): Promise<ExecOutput> {
   const cp = spawn(
     cmd,
     args.map((arg) => process.platform === "win32" ? `"${arg}"` : `'${arg}'`),
@@ -223,20 +229,24 @@ export async function exec(
     },
   );
 
-  let output = "";
+  let combined = "";
+  let stdout = "";
+  let stderr = "";
 
   if (captureOutput) {
     cp.stdout?.on("data", (data) => {
-      output += data;
+      combined += data;
+      stdout += data;
     });
     cp.stderr?.on("data", (data) => {
-      output += data;
+      combined += data;
+      stderr += data;
     });
   }
 
-  return new Promise<string>((resolve, reject) => {
+  return new Promise<ExecOutput>((resolve, reject) => {
     cp.on("exit", (code) => {
-      if (code === 0) resolve(output);
+      if (code === 0) resolve({ combined, stdout, stderr });
       else reject(new ExecError(code ?? 1));
     });
   });

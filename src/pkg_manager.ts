@@ -29,7 +29,8 @@ function toPackageArgs(pkgs: JsrPackage[]): string[] {
 
 async function isYarnBerry(cwd: string) {
   // this command works for both yarn classic and berry
-  const version = await exec("yarn", ["--version"], cwd, undefined, true);
+  const output = await exec("yarn", ["--version"], cwd, undefined, true);
+  const version = output.stdout;
   if (!version) {
     logDebug("Unable to detect yarn version, assuming classic");
     return false;

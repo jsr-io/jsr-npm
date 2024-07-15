@@ -197,7 +197,7 @@ describe("install", () => {
 
       assert.match(
         pkgJson.dependencies["@std/encoding"],
-        /^npm:@jsr\/std__encoding@\d+\.\d+\.\d+.*$/,
+        /^npm:@jsr\/std__encoding@[^]?\d+\.\d+\.\d+.*$/,
       );
 
       const npmRc = await readTextFile(path.join(dir, ".npmrc"));
@@ -751,6 +751,28 @@ describe("publish", () => {
 
         await runJsr(["publish", "--dry-run", "--non-existant-option"], dir, {
           DENO_BIN_PATH: path.join(__dirname, "fixtures", "dummy.js"),
+        });
+      });
+    });
+
+    it("use deno canary binary when DENO_BIN_CANARY when set", async () => {
+      await runInTempDir(async (dir) => {
+        await writeTextFile(
+          path.join(dir, "mod.ts"),
+          "export const value = 42;",
+        );
+
+        // TODO: Change this once deno supports jsr.json
+        await writeJson<DenoJson>(path.join(dir, "deno.json"), {
+          name: "@deno/jsr-cli-test",
+          version: "1.0.0",
+          exports: {
+            ".": "./mod.ts",
+          },
+        });
+
+        await runJsr(["publish", "--dry-run"], dir, {
+          DENO_BIN_CANARY: "true",
         });
       });
     });

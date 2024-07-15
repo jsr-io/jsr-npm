@@ -107,6 +107,10 @@ ${
         "DENO_BIN_PATH",
         "Use specified Deno binary instead of local downloaded one.",
       ],
+      [
+        "DENO_BIN_CANARY",
+        "Use the canary Deno binary instead of latest for publishing.",
+      ],
     ])
   }
 `);
@@ -148,6 +152,7 @@ if (args.length === 0) {
     run(async () => {
       const projectInfo = await findProjectDir(process.cwd());
       return publish(process.cwd(), {
+        canary: process.env.DENO_BIN_CANARY !== undefined,
         binFolder,
         publishArgs: args.slice(1),
         pkgJsonPath: projectInfo.pkgJsonPath,
@@ -185,6 +190,7 @@ if (args.length === 0) {
         pnpm: { type: "boolean", default: false },
         bun: { type: "boolean", default: false },
         debug: { type: "boolean", default: false },
+        canary: { type: "boolean", default: false },
         help: { type: "boolean", default: false, short: "h" },
         version: { type: "boolean", default: false, short: "v" },
       },

@@ -10,6 +10,7 @@ import * as StreamZip from "node-stream-zip";
 const streamFinished = util.promisify(stream.finished);
 
 const DENO_CANARY_INFO_URL = "https://dl.deno.land/canary-latest.txt";
+const DENO_RELEASE_INFO_URL = "https://dl.deno.land/release-latest.txt";
 
 // Example: https://github.com/denoland/deno/releases/download/v1.41.0/deno-aarch64-apple-darwin.zip
 // Example: https://dl.deno.land/canary/d722de886b85093eeef08d1e9fd6f3193405762d/deno-aarch64-apple-darwin.zip
@@ -27,7 +28,9 @@ export interface DownloadInfo {
   version: string;
 }
 
-export async function getDenoDownloadUrl(): Promise<DownloadInfo> {
+export async function getDenoDownloadUrl(
+  canary: boolean,
+): Promise<DownloadInfo> {
   const key = `${process.platform} ${os.arch()}`;
   if (!(key in FILENAMES)) {
     throw new Error(`Unsupported platform: ${key}`);
@@ -35,20 +38,25 @@ export async function getDenoDownloadUrl(): Promise<DownloadInfo> {
 
   const name = FILENAMES[key];
 
-  const res = await fetch(DENO_CANARY_INFO_URL);
+  const url = canary ? DENO_CANARY_INFO_URL : DENO_RELEASE_INFO_URL;
+  const res = await fetch(url);
   if (!res.ok) {
     await res.body?.cancel();
     throw new Error(
-      `${res.status}: Unable to retrieve canary version information from ${DENO_CANARY_INFO_URL}.`,
+      `${res.status}: Unable to retrieve ${
+        canary ? "canary" : "release"
+      } version information from ${url}.`,
     );
   }
-  const sha = (await res.text()).trim();
+  const version = (await res.text()).trim();
 
   const filename = name + ".zip";
   return {
-    url: `https://dl.deno.land/canary/${decodeURI(sha)}/${filename}`,
+    url: canary
+      ? `https://dl.deno.land/canary/${decodeURI(version)}/${filename}`
+      : `https://dl.deno.land/release/${decodeURI(version)}/${filename}`,
     filename,
-    version: sha,
+    version: version,
   };
 }
 

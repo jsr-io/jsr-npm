@@ -129,10 +129,11 @@ export interface PublishOptions {
   binFolder: string;
   pkgJsonPath: string | null;
   publishArgs: string[];
+  canary: boolean;
 }
 
-async function getOrDownloadBinPath(binFolder: string) {
-  const info = await getDenoDownloadUrl();
+async function getOrDownloadBinPath(binFolder: string, canary: boolean) {
+  const info = await getDenoDownloadUrl(canary);
 
   const binPath = path.join(
     binFolder,
@@ -164,7 +165,7 @@ async function getOrDownloadBinPath(binFolder: string) {
 
 export async function publish(cwd: string, options: PublishOptions) {
   const binPath = process.env.DENO_BIN_PATH ??
-    await getOrDownloadBinPath(options.binFolder);
+    await getOrDownloadBinPath(options.binFolder, options.canary);
 
   // Ready to publish now!
   const args = [

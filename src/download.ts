@@ -26,6 +26,7 @@ export interface DownloadInfo {
   url: string;
   filename: string;
   version: string;
+  canary: boolean;
 }
 
 export async function getDenoDownloadUrl(
@@ -52,6 +53,7 @@ export async function getDenoDownloadUrl(
 
   const filename = name + ".zip";
   return {
+    canary,
     url: canary
       ? `https://dl.deno.land/canary/${decodeURI(version)}/${filename}`
       : `https://dl.deno.land/release/${decodeURI(version)}/${filename}`,
@@ -74,7 +76,9 @@ export async function downloadDeno(
     throw new Error(`Unexpected empty body`);
   }
 
-  console.log(`Downloading JSR binary...`);
+  console.log(
+    `Downloading JSR ${info.canary ? "canary" : "release"} binary...`,
+  );
 
   await withProgressBar(
     async (tick) => {

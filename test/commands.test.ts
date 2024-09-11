@@ -657,6 +657,7 @@ describe("publish", () => {
       await writeJson<DenoJson>(path.join(dir, "deno.json"), {
         name: "@deno/jsr-cli-test",
         version: pkgJson.version!,
+        license: "MIT",
         exports: {
           ".": "./mod.ts",
         },
@@ -679,6 +680,7 @@ describe("publish", () => {
       await writeJson<DenoJson>(path.join(dir, "deno.json"), {
         name: "@deno/jsr-cli-test",
         version: "0.0.1",
+        license: "MIT",
         exports: {
           ".": "./mod.ts",
         },
@@ -717,6 +719,7 @@ describe("publish", () => {
       await writeJson<DenoJson>(path.join(dir, "jsr.json"), {
         name: "@deno/jsr-cli-test",
         version: pkgJson.version!,
+        license: "MIT",
         exports: {
           ".": "./mod.ts",
         },
@@ -744,6 +747,7 @@ describe("publish", () => {
         await writeJson<DenoJson>(path.join(dir, "deno.json"), {
           name: "@deno/jsr-cli-test",
           version: "1.0.0",
+          license: "MIT",
           exports: {
             ".": "./mod.ts",
           },
@@ -766,6 +770,7 @@ describe("publish", () => {
         await writeJson<DenoJson>(path.join(dir, "deno.json"), {
           name: "@deno/jsr-cli-test",
           version: "1.0.0",
+          license: "MIT",
           exports: {
             ".": "./mod.ts",
           },

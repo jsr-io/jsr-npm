@@ -503,6 +503,25 @@ describe("install", () => {
       );
     });
 
+    it("prefer lockfile detection over env detection", async () => {
+      await runInTempDir(async (tmp) => {
+        await writeJson<PkgJson>(path.join(tmp, "package.json"), {
+          name: "foo",
+          version: "0.0.1",
+          dependencies: {
+            preact: "10.23.2",
+          },
+        });
+
+        await exec("pnpm", ["install"], tmp);
+        await runJsr(["i", "@std/encoding@0.216.0"], tmp, {
+          npm_config_user_agent:
+            `npm/10.8.2 node/v22.5.1 darwin arm64 workspaces/false`,
+        });
+        assert.ok(!fs.existsSync(path.join(tmp, "package-lock.json")));
+      });
+    });
+
     it("overwrite detection with arg from npm_config_user_agent", async () => {
       await withTempEnv(
         ["i", "--npm", "@std/encoding@0.216.0"],
@@ -657,6 +676,7 @@ describe("publish", () => {
       await writeJson<DenoJson>(path.join(dir, "deno.json"), {
         name: "@deno/jsr-cli-test",
         version: pkgJson.version!,
+        license: "MIT",
         exports: {
           ".": "./mod.ts",
         },
@@ -679,6 +699,7 @@ describe("publish", () => {
       await writeJson<DenoJson>(path.join(dir, "deno.json"), {
         name: "@deno/jsr-cli-test",
         version: "0.0.1",
+        license: "MIT",
         exports: {
           ".": "./mod.ts",
         },
@@ -717,6 +738,7 @@ describe("publish", () => {
       await writeJson<DenoJson>(path.join(dir, "jsr.json"), {
         name: "@deno/jsr-cli-test",
         version: pkgJson.version!,
+        license: "MIT",
         exports: {
           ".": "./mod.ts",
         },
@@ -744,6 +766,7 @@ describe("publish", () => {
         await writeJson<DenoJson>(path.join(dir, "deno.json"), {
           name: "@deno/jsr-cli-test",
           version: "1.0.0",
+          license: "MIT",
           exports: {
             ".": "./mod.ts",
           },
@@ -766,6 +789,7 @@ describe("publish", () => {
         await writeJson<DenoJson>(path.join(dir, "deno.json"), {
           name: "@deno/jsr-cli-test",
           version: "1.0.0",
+          license: "MIT",
           exports: {
             ".": "./mod.ts",
           },

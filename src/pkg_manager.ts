@@ -216,7 +216,7 @@ export async function getPkgManager(
     );
   const rootPath = root || projectDir;
 
-  const result = pkgManagerName || fromEnv || fromLockfile || "npm";
+  const result = pkgManagerName || fromLockfile || fromEnv || "npm";
 
   let pkgManager: PackageManager;
   if (result === "yarn") {

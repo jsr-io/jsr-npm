@@ -38,28 +38,37 @@ export async function getDenoDownloadUrl(
   }
 
   const name = FILENAMES[key];
-
-  const url = canary ? DENO_CANARY_INFO_URL : DENO_RELEASE_INFO_URL;
-  const res = await fetch(url);
-  if (!res.ok) {
-    await res.body?.cancel();
-    throw new Error(
-      `${res.status}: Unable to retrieve ${
-        canary ? "canary" : "release"
-      } version information from ${url}.`,
-    );
-  }
-  const version = (await res.text()).trim();
-
   const filename = name + ".zip";
+
   return {
-    canary,
-    url: canary
-      ? `https://dl.deno.land/canary/${decodeURI(version)}/${filename}`
-      : `https://dl.deno.land/release/${decodeURI(version)}/${filename}`,
+    canary: false,
+    url:
+      `https://dl.deno.land/canary/c38dbe500b0a5815f4b07d4a6b696c5fdf622dc0/${filename}`,
     filename,
-    version: version,
+    version: "c38dbe500b0a5815f4b07d4a6b696c5fdf622dc0",
   };
+
+  // TEMPORARIALLY FORCE USE OF VERSION c38dbe500b0a5815f4b07d4a6b696c5fdf622dc0
+  // const url = canary ? DENO_CANARY_INFO_URL : DENO_RELEASE_INFO_URL;
+  // const res = await fetch(url);
+  // if (!res.ok) {
+  //   await res.body?.cancel();
+  //   throw new Error(
+  //     `${res.status}: Unable to retrieve ${
+  //       canary ? "canary" : "release"
+  //     } version information from ${url}.`,
+  //   );
+  // }
+  // const version = (await res.text()).trim();
+
+  // return {
+  //   canary,
+  //   url: canary
+  //     ? `https://dl.deno.land/canary/${decodeURI(version)}/${filename}`
+  //     : `https://dl.deno.land/release/${decodeURI(version)}/${filename}`,
+  //   filename,
+  //   version: version,
+  // };
 }
 
 export async function downloadDeno(

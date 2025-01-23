@@ -42,6 +42,14 @@ describe("findProjectDir", () => {
     });
   });
 
+  it("should return bun if bun.lock is found", async () => {
+    await runInTempDir(async (tempDir) => {
+      await writeTextFile(path.join(tempDir, "bun.lock"), "");
+      const result = await findProjectDir(tempDir);
+      assert.strictEqual(result.pkgManagerName, "bun");
+    });
+  });
+
   it("should return bun if bun.lockb and yarn.lock are found", async () => {
     // bun allow to save bun.lockb and yarn.lock
     // https://bun.sh/docs/install/lockfile

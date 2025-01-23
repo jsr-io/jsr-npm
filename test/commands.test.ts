@@ -277,7 +277,7 @@ describe("install", () => {
         ["i", "--bun", "--save-dev", "@std/encoding@0.216.0"],
         async (dir) => {
           assert.ok(
-            await isFile(path.join(dir, "bun.lockb")),
+            await isFile(path.join(dir, "bun.lock")),
             "bun lockfile not created",
           );
           const pkgJson = await readJson<PkgJson>(
@@ -333,7 +333,7 @@ describe("install", () => {
         ["i", "--bun", "--save-optional", "@std/encoding@0.216.0"],
         async (dir) => {
           assert.ok(
-            await isFile(path.join(dir, "bun.lockb")),
+            await isFile(path.join(dir, "bun.lock")),
             "bun lockfile not created",
           );
           const pkgJson = await readJson<PkgJson>(
@@ -440,7 +440,7 @@ describe("install", () => {
         ["i", "--bun", "@std/encoding@0.216.0"],
         async (dir) => {
           assert.ok(
-            await isFile(path.join(dir, "bun.lockb")),
+            await isFile(path.join(dir, "bun.lock")),
             "bun lockfile not created",
           );
 
@@ -584,7 +584,7 @@ describe("install", () => {
           ["i", "@std/encoding@0.216.0"],
           async (dir) => {
             assert.ok(
-              await isFile(path.join(dir, "bun.lockb")),
+              await isFile(path.join(dir, "bun.lock")),
               "bun lockfile not created",
             );
           },

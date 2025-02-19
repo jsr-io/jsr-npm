@@ -88,14 +88,30 @@ export async function findProjectDir(
   // the root project location.
   if (result.pkgJsonPath === null) {
     const pkgJsonPath = path.join(dir, "package.json");
+    const denoJsonPath = path.join(dir, "deno.json");
+    const denoJsoncPath = path.join(dir, "deno.jsonc");
+
     if (await fileExists(pkgJsonPath)) {
       logDebug(`Found package.json at ${pkgJsonPath}`);
       logDebug(`Setting project directory to ${dir}`);
       result.projectDir = dir;
       result.pkgJsonPath = pkgJsonPath;
+    } else if (await fileExists(denoJsonPath)) {
+      logDebug(`Found deno.json at ${denoJsonPath}`);
+      logDebug(`Setting project directory to ${dir}`);
+      result.projectDir = dir;
+      result.pkgJsonPath = denoJsonPath;
+    } else if (await fileExists(denoJsoncPath)) {
+      logDebug(`Found deno.jsonc at ${denoJsoncPath}`);
+      logDebug(`Setting project directory to ${dir}`);
+      result.projectDir = dir;
+      result.pkgJsonPath = denoJsoncPath;
     }
   } else {
     const pkgJsonPath = path.join(dir, "package.json");
+    const denoJsonPath = path.join(dir, "deno.json");
+    const denoJsoncPath = path.join(dir, "deno.jsonc");
+
     if (await fileExists(pkgJsonPath)) {
       const json = await readJson<PkgJson>(pkgJsonPath);
       // npm + yarn + bun workspaces
@@ -105,6 +121,18 @@ export async function findProjectDir(
       else if (await fileExists(path.join(dir, "pnpm-workspace.yaml"))) {
         result.root = dir;
       }
+    } else if (await fileExists(denoJsonPath)) {
+      const json = await readJson<DenoJson>(denoJsonPath);
+      // deno workspace
+      if (Array.isArray(json.workspace)) {
+        result.root = dir;
+      } 
+    } else if (await fileExists(denoJsoncPath)) {
+      const json = await readJson<DenoJson>(denoJsoncPath);
+      // deno workspace in .jsonc file
+      if (Array.isArray(json.workspace)) {
+        result.root = dir;
+      } 
     }
   }
 
@@ -112,6 +140,13 @@ export async function findProjectDir(
   if (await fileExists(npmLockfile)) {
     logDebug(`Detected npm from lockfile ${npmLockfile}`);
     result.pkgManagerName = "npm";
+    return result;
+  }
+  
+  const denoLockfile = path.join(dir, "deno.lock");
+  if (await fileExists(denoLockfile)) {
+    logDebug(`Detected deno from lockfile ${denoLockfile}`);
+    result.pkgManagerName = "deno";
     return result;
   }
 
@@ -282,6 +317,12 @@ export interface PkgJson {
   optionalDependencies?: Record<string, string>;
   exports?: string | Record<string, string | Record<string, string>>;
   scripts?: Record<string, string>;
+}
+
+export interface DenoJson {
+  name?: string;
+  version?: string;
+  workspace?: Array<string>;
 }
 
 export async function writeJson<T>(file: string, data: T): Promise<void> {

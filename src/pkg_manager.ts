@@ -191,7 +191,7 @@ export class Bun implements PackageManager {
   }
 }
 
-export type PkgManagerName = "npm" | "yarn" | "pnpm" | "bun";
+export type PkgManagerName = "npm" | "yarn" | "pnpm" | "bun" | "deno";
 
 function getPkgManagerFromEnv(value: string): PkgManagerName | null {
   if (value.startsWith("pnpm/")) return "pnpm";

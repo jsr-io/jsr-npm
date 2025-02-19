@@ -5,6 +5,7 @@ import {
   findProjectDir,
   JsrPackage,
   PkgJson,
+  DenoJson,
   writeJson,
   writeTextFile,
 } from "../src/utils";
@@ -80,6 +81,21 @@ describe("findProjectDir", () => {
         workspaces: ["sub"],
       });
       await writeJson(path.join(sub, "package.json"), {});
+      const result = await findProjectDir(sub);
+      assert.strictEqual(
+        result.root,
+        tempDir,
+      );
+    });
+  });
+
+
+  it("should find deno workspace root folder", async () => {
+    await runInTempDir(async (tempDir) => {
+      const sub = path.join(tempDir, "sub");
+
+      await writeJson<DenoJson>(path.join(tempDir, "deno.json"), { workspace: ["./sub"] });
+      await writeJson(path.join(sub, "deno.json"), {});
       const result = await findProjectDir(sub);
       assert.strictEqual(
         result.root,

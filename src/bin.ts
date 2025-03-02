@@ -84,17 +84,25 @@ Publish Options:
 ${
     prettyPrintRow([
       [
-        "--token <Token>",
-        "The API token to use when publishing. If unset, interactive authentication will be used.",
+        "--allow-dirty",
+        "Allow publishing if the repository has uncommitted changed.",
       ],
+      ["--allow-slow-types", "Allow publishing with slow types."],
       [
         "--dry-run",
         "Prepare the package for publishing performing all checks and validations without uploading.",
       ],
-      ["--allow-slow-types", "Allow publishing with slow types."],
       [
-        "--provenance",
-        "From CI/CD system, publicly links the package to where it was built and published from.",
+        "--no-provenance",
+        "Disable provenance attestation. Enabled by default on Github actions, publicly links the package to where it was built and published from.",
+      ],
+      [
+        "--set-version <VERSION>",
+        "Set version for a package to be published. This flag can be used while publishing individual packages and cannot be used in a workspace",
+      ],
+      [
+        "--token <Token>",
+        "The API token to use when publishing. If unset, interactive authentication will be used.",
       ],
     ])
   }

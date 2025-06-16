@@ -1,10 +1,10 @@
 {
   "name": "jsr",
   "version": "0.13.4",
-  "description": "jsr.io package manager for node",
+  "description": "jsr.io package manager for npm, yarn, pnpm and bun",
   "repository": {
     "type": "git",
-    "url": "https://github.com/denoland/jsr-node-cli.git"
+    "url": "https://github.com/jsr-io/jsr-npm.git"
   },
   "bin": {
     "jsr": "dist/bin.js"

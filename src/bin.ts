@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 // Copyright 2024 the JSR authors. MIT license.
-import * as kl from "kolorist";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { parseArgs } from "node:util";
@@ -18,6 +17,7 @@ import {
   JsrPackageNameError,
   prettyTime,
   setDebug,
+  styleText
 } from "./utils";
 import { PkgManagerName } from "./pkg_manager";
 
@@ -31,7 +31,7 @@ function prettyPrintRow(rows: [string, string][]) {
   }
 
   return rows
-    .map((row) => `  ${kl.green(row[0].padStart(max))}  ${row[1]}`)
+    .map((row) => `  ${styleText("green", row[0].padEnd(max))}  ${row[1]}`)
     .join("\n");
 }
 
@@ -121,7 +121,7 @@ function getPackages(positionals: string[], allowEmpty: boolean): JsrPackage[] {
   const packages = pkgArgs.map((p) => JsrPackage.from(p));
 
   if (!allowEmpty && pkgArgs.length === 0) {
-    console.error(kl.red(`Missing packages argument.`));
+    console.error(styleText("red", `Missing packages argument.`));
     console.log();
     printHelp();
     process.exit(1);
@@ -161,7 +161,7 @@ if (args.length === 0) {
   } else if (cmd === "view" || cmd === "show" || cmd === "info") {
     const pkgName = args[1];
     if (pkgName === undefined) {
-      console.log(kl.red(`Missing package name.`));
+      console.error(styleText("red", `Missing package name.`));
       printHelp();
       process.exit(1);
     }
@@ -236,7 +236,7 @@ if (args.length === 0) {
     } else if (cmd === "run") {
       const script = options.positionals[1];
       if (!script) {
-        console.error(kl.red(`Missing script argument.`));
+        console.error(styleText("red", `Missing script argument.`));
         console.log();
         printHelp();
         process.exit(1);
@@ -270,13 +270,13 @@ async function run(fn: () => Promise<void>) {
     await fn();
     const time = Date.now() - start;
     console.log();
-    console.log(`${kl.green("Completed")} in ${prettyTime(time)}`);
+    console.log(`${styleText("green", "Completed")} in ${prettyTime(time)}`);
   } catch (err) {
     if (err instanceof JsrPackageNameError) {
-      console.log(kl.red(err.message));
+      console.log(styleText("red", err.message));
       process.exit(1);
     } else if (err instanceof ExecError) {
-      console.log(kl.red(err.message));
+      console.log(styleText("red", err.message));
       process.exit(err.code);
     }
 
@@ -285,7 +285,7 @@ async function run(fn: () => Promise<void>) {
 }
 
 function throwUnknownCommand(cmd: string) {
-  console.error(kl.red(`Unknown command: ${cmd}`));
+  console.error(styleText("red", `Unknown command: ${cmd}`));
   console.log();
   printHelp();
   process.exit(1);

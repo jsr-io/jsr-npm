@@ -2,11 +2,11 @@
 import { getLatestPackageVersion } from "./api";
 import { InstallOptions } from "./commands";
 import { exec, findProjectDir, JsrPackage, logDebug } from "./utils";
-import * as kl from "kolorist";
+import { styleText } from './utils'
 import semiver from "semiver";
 
 async function execWithLog(cmd: string, args: string[], cwd: string) {
-  console.log(kl.dim(`$ ${cmd} ${args.join(" ")}`));
+  console.log(styleText("dim", `$ ${cmd} ${args.join(" ")}`));
   return exec(cmd, args, cwd);
 }
 

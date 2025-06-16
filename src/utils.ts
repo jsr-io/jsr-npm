@@ -1,6 +1,7 @@
 // Copyright 2024 the JSR authors. MIT license.
 import * as path from "node:path";
 import * as fs from "node:fs";
+import * as util from "node:util";
 import { PkgManagerName } from "./pkg_manager";
 import { spawn } from "node:child_process";
 
@@ -303,3 +304,7 @@ export async function writeTextFile(
   } catch (_) {}
   await fs.promises.writeFile(file, content, "utf-8");
 }
+
+export const styleText = typeof util.styleText === "function"
+		? util.styleText
+		: (_style: string[] | string, text: string) => text;

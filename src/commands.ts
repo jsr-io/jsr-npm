@@ -1,7 +1,7 @@
 // Copyright 2024 the JSR authors. MIT license.
 import * as path from "node:path";
 import * as fs from "node:fs";
-import * as kl from "kolorist";
+import { styleText } from './utils'
 import {
   exec,
   fileExists,
@@ -26,9 +26,9 @@ async function wrapWithStatus(msg: string, fn: () => Promise<void>) {
 
   try {
     await fn();
-    process.stdout.write(kl.green("ok") + "\n");
+    process.stdout.write( styleText("green", "ok") + "\n");
   } catch (err) {
-    process.stdout.write(kl.red("error") + "\n");
+    process.stdout.write(styleText("red", "error") + "\n");
     throw err;
   }
 }
@@ -110,7 +110,7 @@ export async function install(packages: JsrPackage[], options: InstallOptions) {
       await setupNpmRc(root);
     }
 
-    console.log(`Installing ${kl.cyan(packages.join(", "))}...`);
+    console.log(`Installing ${styleText("cyan", packages.join(", "))}...`);
   }
 
   await pkgManager.install(packages, options);
@@ -121,7 +121,7 @@ export async function remove(packages: JsrPackage[], options: BaseOptions) {
     process.cwd(),
     options.pkgManagerName,
   );
-  console.log(`Removing ${kl.cyan(packages.join(", "))}...`);
+  console.log(`Removing ${styleText("cyan", packages.join(", "))}...`);
   await pkgManager.remove(packages);
 }
 
@@ -235,17 +235,18 @@ export async function showPackageInfo(raw: string) {
 
   console.log();
   console.log(
-    kl.cyan(`@${pkg.scope}/${pkg.name}@${pkg.version}`) +
-      ` | latest: ${kl.magenta(meta.latest ?? "-")} | versions: ${
-        kl.magenta(versionCount)
+    styleText("cyan", `@${pkg.scope}/${pkg.name}@${pkg.version}`
+    ) +
+      ` | latest: ${styleText("magenta", meta.latest ?? "-")} | versions: ${
+        styleText("magenta", versionCount.toString())
       }`,
   );
   console.log(npmInfo.description);
   console.log();
-  console.log(`npm tarball:   ${kl.cyan(versionInfo.dist.tarball)}`);
-  console.log(`npm integrity: ${kl.cyan(versionInfo.dist.integrity)}`);
+  console.log(`npm tarball:   ${styleText("cyan", versionInfo.dist.tarball)}`);
+  console.log(`npm integrity: ${styleText("cyan", versionInfo.dist.integrity)}`);
   console.log();
   console.log(
-    `published: ${kl.magenta(timeAgo(Date.now() - publishTime))}`,
+    `published: ${styleText("magenta", timeAgo(Date.now() - publishTime))}`,
   );
 }

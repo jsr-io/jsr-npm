@@ -1,4 +1,4 @@
-import { JsrPackage } from "./utils";
+import { JsrPackage } from "./utils.ts";
 
 export const JSR_URL = process.env.JSR_URL ?? "https://jsr.io";
 

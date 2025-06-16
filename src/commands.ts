@@ -1,13 +1,13 @@
 // Copyright 2024 the JSR authors. MIT license.
 import * as path from "node:path";
 import * as fs from "node:fs";
-import { styleText } from "./utils";
 import {
   exec,
   fileExists,
   getNewLineChars,
   JsrPackage,
   timeAgo,
+  styleText,
 } from "./utils";
 import { Bun, getPkgManager, PkgManagerName, YarnBerry } from "./pkg_manager";
 import { downloadDeno, getDenoDownloadUrl } from "./download";

@@ -1,25 +1,26 @@
-import * as path from "path";
-import * as fs from "fs";
+import * as path from "node:path";
+import * as fs from "node:fs";
+import * as assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import {
-  DenoJson,
+  type DenoJson,
   enableYarnBerry,
   isDirectory,
   isFile,
   runInTempDir,
   runJsr,
   withTempEnv,
-} from "./test_utils";
-import * as assert from "node:assert/strict";
+} from "./test_utils.ts";
 import {
   exec,
   ExecError,
-  PkgJson,
+  type PkgJson,
   readJson,
   readTextFile,
   writeJson,
   writeTextFile,
-} from "../src/utils";
-import { Bun } from "../src/pkg_manager";
+} from "../src/utils.ts";
+import { Bun } from "../src/pkg_manager.ts";
 
 describe("general", () => {
   it("exit 1 on unknown command", async () => {
@@ -183,7 +184,8 @@ describe("install", () => {
 
       await runJsr(["i", "--pnpm", "@std/encoding"], path.join(dir, "sub"));
 
-      assert.deepEqual(
+      // in some case pnpm add `packageManager` key to package.json
+      assert.partialDeepStrictEqual(
         await readJson<PkgJson>(path.join(dir, "package.json")),
         parentPkgJson,
       );
@@ -657,7 +659,7 @@ describe("remove", () => {
 });
 
 describe("publish", () => {
-  it("should publish a package", async () => {
+  it("should publish a package", { timeout: 600000 }, async () => {
     await runInTempDir(async (dir) => {
       const pkgJsonPath = path.join(dir, "package.json");
       const pkgJson = await readJson<PkgJson>(pkgJsonPath);
@@ -683,9 +685,11 @@ describe("publish", () => {
 
       await runJsr(["publish", "--dry-run"], dir);
     });
-  }).timeout(600000);
+  });
 
-  it("should not add unstable publish flags for a Deno project", async () => {
+  it("should not add unstable publish flags for a Deno project", {
+    timeout: 600000,
+  }, async () => {
     await runInTempDir(async (dir) => {
       const pkgJsonPath = path.join(dir, "package.json");
       await fs.promises.rm(pkgJsonPath);
@@ -711,7 +715,7 @@ describe("publish", () => {
         assert.ok(err instanceof ExecError, `Unknown exec error thrown`);
       }
     });
-  }).timeout(600000);
+  });
 
   it("should leave node_modules as is", async () => {
     await runInTempDir(async (dir) => {
@@ -755,6 +759,8 @@ describe("publish", () => {
   // Windows doesn't support #!/usr/bin/env
   if (process.platform !== "win32") {
     it("use deno binary from DENO_BIN_PATH when set", async () => {
+      const __dirname = path.dirname(new URL(import.meta.url).pathname);
+
       await runInTempDir(async (dir) => {
         await writeTextFile(
           path.join(dir, "mod.ts"),

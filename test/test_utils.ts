@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
-import { exec, writeJson } from "../src/utils";
+import { exec, writeJson } from "../src/utils.ts";
 
 export interface DenoJson {
   name: string;
@@ -9,6 +9,8 @@ export interface DenoJson {
   exports: string | Record<string, string>;
   license: string;
 }
+
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 /**
  * This sets the `packageManager` field in the `package.json` of the
@@ -25,8 +27,8 @@ export async function runJsr(
   captureOutput = false,
 ) {
   const bin = path.join(__dirname, "..", "src", "bin.ts");
-  const tsNode = path.join(__dirname, "..", "node_modules", ".bin", "ts-node");
-  return await exec(tsNode, [bin, ...args], cwd, {
+
+  return await exec("node", ["--experimental-strip-types", bin, ...args], cwd, {
     ...process.env,
     npm_config_user_agent: undefined,
     ...env,

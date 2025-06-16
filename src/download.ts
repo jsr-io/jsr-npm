@@ -5,7 +5,7 @@ import * as path from "node:path";
 import * as util from "node:util";
 import * as stream from "node:stream";
 import * as StreamZip from "node-stream-zip";
-import { styleText } from "./utils";
+import { styleText } from "./utils.ts";
 
 const streamFinished = util.promisify(stream.finished);
 

@@ -17,10 +17,11 @@
     }
   },
   "scripts": {
-    "test": "mocha -r ts-node/register --extensions ts,tsx --timeout 30000 --watch-files src,test 'test/**/*.test.ts'",
-    "cli": "ts-node src/bin.ts",
+    "test": "node --test --experimental-strip-types test/**.test.ts",
+    "test:coverage": "node --test --experimental-strip-types --experimental-test-coverage test/**.test.ts",
+    "cli": "node --experimental-strip-types src/bin.ts",
     "build": "rimraf dist dist-esm && tsc && tsc -p tsconfig.esm.json",
-    "prepack": "npm run build"
+    "prepack": "node --run build"
   },
   "keywords": [
     "install",
@@ -38,12 +39,9 @@
     "dist-esm/"
   ],
   "devDependencies": {
-    "@types/mocha": "^10.0.6",
     "@types/node": "^22.9.0",
-    "mocha": "^10.3.0",
     "rimraf": "^5.0.5",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.8.3"
   },
   "dependencies": {
     "node-stream-zip": "^1.15.0",

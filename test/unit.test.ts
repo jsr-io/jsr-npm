@@ -1,8 +1,9 @@
-import * as path from "path";
-import { runInTempDir } from "./test_utils";
-import { setupNpmRc } from "../src/commands";
-import * as assert from "assert/strict";
-import { readTextFile, writeTextFile } from "../src/utils";
+import * as path from "node:path";
+import * as assert from "node:assert/strict";
+import { describe, it } from "node:test";
+import { runInTempDir } from "./test_utils.ts";
+import { setupNpmRc } from "../src/commands.ts";
+import { readTextFile, writeTextFile } from "../src/utils.ts";
 
 describe("npmrc", () => {
   it("doesn't overwrite exising jsr mapping", async () => {

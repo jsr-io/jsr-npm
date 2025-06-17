@@ -2,7 +2,7 @@
 import { getLatestPackageVersion } from "./api";
 import { InstallOptions } from "./commands";
 import { exec, findProjectDir, JsrPackage, logDebug } from "./utils";
-import { styleText } from './utils'
+import { styleText } from "./utils";
 import semiver from "semiver";
 
 async function execWithLog(cmd: string, args: string[], cwd: string) {

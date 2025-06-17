@@ -864,7 +864,7 @@ describe("show", () => {
       undefined,
       true,
     );
-  
+
     assert.ok(output.combined.includes("latest: -"));
     assert.ok(output.combined.includes("npm tarball:"));
   });

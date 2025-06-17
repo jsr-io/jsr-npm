@@ -306,5 +306,5 @@ export async function writeTextFile(
 }
 
 export const styleText = typeof util.styleText === "function"
-		? util.styleText
-		: (_style: string[] | string, text: string) => text;
+  ? util.styleText
+  : (_style: string[] | string, text: string) => text;

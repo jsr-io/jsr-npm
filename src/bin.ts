@@ -17,7 +17,7 @@ import {
   JsrPackageNameError,
   prettyTime,
   setDebug,
-  styleText
+  styleText,
 } from "./utils";
 import { PkgManagerName } from "./pkg_manager";
 

@@ -39,14 +39,13 @@
   ],
   "devDependencies": {
     "@types/mocha": "^10.0.6",
-    "@types/node": "^20.11.18",
+    "@types/node": "^22.9.0",
     "mocha": "^10.3.0",
     "rimraf": "^5.0.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "kolorist": "^1.8.0",
     "node-stream-zip": "^1.15.0",
     "semiver": "^1.1.0"
   }

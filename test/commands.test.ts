@@ -1,6 +1,5 @@
 import * as path from "path";
 import * as fs from "fs";
-import * as kl from "kolorist";
 import {
   DenoJson,
   enableYarnBerry,
@@ -839,9 +838,9 @@ describe("show", () => {
       undefined,
       true,
     );
-    const txt = kl.stripColors(output.combined);
-    assert.ok(txt.includes("latest:"));
-    assert.ok(txt.includes("npm tarball:"));
+
+    assert.ok(output.combined.includes("latest:"));
+    assert.ok(output.combined.includes("npm tarball:"));
   });
 
   it("can use 'view' alias", async () => {
@@ -865,8 +864,8 @@ describe("show", () => {
       undefined,
       true,
     );
-    const txt = kl.stripColors(output.combined);
-    assert.ok(txt.includes("latest: -"));
-    assert.ok(txt.includes("npm tarball:"));
+
+    assert.ok(output.combined.includes("latest: -"));
+    assert.ok(output.combined.includes("npm tarball:"));
   });
 });

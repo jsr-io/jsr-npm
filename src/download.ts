@@ -4,8 +4,8 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as util from "node:util";
 import * as stream from "node:stream";
-import * as kl from "kolorist";
 import * as StreamZip from "node-stream-zip";
+import { styleText } from "./utils";
 
 const streamFinished = util.promisify(stream.finished);
 
@@ -134,12 +134,13 @@ async function withProgressBar<T>(
       const percent = Math.floor((100 / options.max) * current);
 
       const bar = "#".repeat((barLength / 100) * percent) + ">";
-      const remaining = kl.blue(
+      const remaining = styleText(
+        "blue",
         "-".repeat(Math.max(barLength - bar.length, 0)),
       );
-      s += ` [${kl.cyan(bar)}${remaining}] `;
+      s += ` [${styleText("cyan", bar)}${remaining}] `;
     }
-    s += kl.dim(stats);
+    s += styleText("dim", stats);
 
     if (process.stdout.isTTY) {
       if (logged) {

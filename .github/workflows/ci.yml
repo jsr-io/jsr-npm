@@ -31,6 +31,7 @@ jobs:
 
   test:
     strategy:
+      fail-fast: false # prevent a failure in other versions run cancelling others
       matrix:
         platform: [ubuntu-latest, macos-latest, windows-latest]
         node-version: ["22.x", "24.x"]

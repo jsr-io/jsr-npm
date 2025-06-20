@@ -22,6 +22,17 @@ import {
 import type { PkgManagerName } from "./pkg_manager.ts";
 
 const args = process.argv.slice(2);
+let __dirname: string;
+
+// @ts-ignore
+if (import.meta.url) {
+  // @ts-ignore
+  __dirname = path.dirname(new URL(import.meta.url).pathname);
+} else {
+  // For Node.js environments that do not support import.meta.url
+  // which means commonjs environments.
+  __dirname = globalThis.__dirname;
+}
 
 function prettyPrintRow(rows: [string, string][]) {
   let max = 0;

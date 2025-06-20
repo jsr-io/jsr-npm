@@ -17,6 +17,7 @@ import {
   type PkgJson,
   readJson,
   readTextFile,
+  styleText,
   writeJson,
   writeTextFile,
 } from "../src/utils.ts";
@@ -273,23 +274,21 @@ describe("install", () => {
       });
     });
 
-    if (process.platform !== "win32") {
-      await withTempEnv(
-        ["i", "--bun", "--save-dev", "@std/encoding@0.216.0"],
-        async (dir) => {
-          assert.ok(
-            await isFile(path.join(dir, "bun.lock")),
-            "bun lockfile not created",
-          );
-          const pkgJson = await readJson<PkgJson>(
-            path.join(dir, "package.json"),
-          );
-          assert.deepEqual(pkgJson.devDependencies, {
-            "@std/encoding": "npm:@jsr/std__encoding@0.216.0",
-          });
-        },
-      );
-    }
+    await withTempEnv(
+      ["i", "--bun", "--save-dev", "@std/encoding@0.216.0"],
+      async (dir) => {
+        assert.ok(
+          await isFile(path.join(dir, "bun.lock")),
+          "bun lockfile not created",
+        );
+        const pkgJson = await readJson<PkgJson>(
+          path.join(dir, "package.json"),
+        );
+        assert.deepEqual(pkgJson.devDependencies, {
+          "@std/encoding": "npm:@jsr/std__encoding@0.216.0",
+        });
+      },
+    );
   });
 
   it("jsr add -O @std/encoding@0.216.0 - dev dependency", async () => {
@@ -329,23 +328,21 @@ describe("install", () => {
       });
     });
 
-    if (process.platform !== "win32") {
-      await withTempEnv(
-        ["i", "--bun", "--save-optional", "@std/encoding@0.216.0"],
-        async (dir) => {
-          assert.ok(
-            await isFile(path.join(dir, "bun.lock")),
-            "bun lockfile not created",
-          );
-          const pkgJson = await readJson<PkgJson>(
-            path.join(dir, "package.json"),
-          );
-          assert.deepEqual(pkgJson.optionalDependencies, {
-            "@std/encoding": "npm:@jsr/std__encoding@0.216.0",
-          });
-        },
-      );
-    }
+    await withTempEnv(
+      ["i", "--bun", "--save-optional", "@std/encoding@0.216.0"],
+      async (dir) => {
+        assert.ok(
+          await isFile(path.join(dir, "bun.lock")),
+          "bun lockfile not created",
+        );
+        const pkgJson = await readJson<PkgJson>(
+          path.join(dir, "package.json"),
+        );
+        assert.deepEqual(pkgJson.optionalDependencies, {
+          "@std/encoding": "npm:@jsr/std__encoding@0.216.0",
+        });
+      },
+    );
   });
 
   it("jsr i - runs '<pkg-manager> install' instead", async () => {
@@ -435,54 +432,53 @@ describe("install", () => {
     });
   });
 
-  if (process.platform !== "win32") {
-    it("jsr add --bun @std/encoding@0.216.0 - forces bun", async () => {
-      await withTempEnv(
-        ["i", "--bun", "@std/encoding@0.216.0"],
-        async (dir) => {
+  it("jsr add --bun @std/encoding@0.216.0 - forces bun", async () => {
+    await withTempEnv(
+      ["i", "--bun", "@std/encoding@0.216.0"],
+      async (dir) => {
+        assert.ok(
+          await isFile(path.join(dir, "bun.lock")),
+          "bun lockfile not created",
+        );
+
+        const bun = new Bun(dir);
+
+        if (await bun.isNpmrcSupported()) {
+          const npmrcPath = path.join(dir, ".npmrc");
+          const npmRc = await readTextFile(npmrcPath);
           assert.ok(
-            await isFile(path.join(dir, "bun.lock")),
-            "bun lockfile not created",
+            npmRc.includes("@jsr:registry=https://npm.jsr.io"),
+            "Missing npmrc registry",
           );
+        } else {
+          const config = await readTextFile(path.join(dir, "bunfig.toml"));
+          assert.match(config, /"@jsr"\s+=/, "bunfig.toml not created");
+        }
+      },
+    );
+  });
 
-          const bun = new Bun(dir);
+  it("jsr add --bun @std/encoding@0.216.0 - forces bun for twice", async () => {
+    await withTempEnv(
+      ["i", "--bun", "@std/encoding@0.216.0"],
+      async (dir) => {
+        await runJsr(["i", "--bun", "@std/encoding@0.216.0"], dir);
 
-          if (await bun.isNpmrcSupported()) {
-            const npmrcPath = path.join(dir, ".npmrc");
-            const npmRc = await readTextFile(npmrcPath);
-            assert.ok(
-              npmRc.includes("@jsr:registry=https://npm.jsr.io"),
-              "Missing npmrc registry",
-            );
-          } else {
-            const config = await readTextFile(path.join(dir, "bunfig.toml"));
-            assert.match(config, /"@jsr"\s+=/, "bunfig.toml not created");
-          }
-        },
-      );
-    });
-    it("jsr add --bun @std/encoding@0.216.0 - forces bun for twice", async () => {
-      await withTempEnv(
-        ["i", "--bun", "@std/encoding@0.216.0"],
-        async (dir) => {
-          await runJsr(["i", "--bun", "@std/encoding@0.216.0"], dir);
-
-          const bun = new Bun(dir);
-          if (await bun.isNpmrcSupported()) {
-            const npmrcPath = path.join(dir, ".npmrc");
-            const npmRc = await readTextFile(npmrcPath);
-            assert.ok(
-              npmRc.includes("@jsr:registry=https://npm.jsr.io"),
-              "Missing npmrc registry",
-            );
-          } else {
-            const config = await readTextFile(path.join(dir, "bunfig.toml"));
-            assert.match(config, /"@jsr"\s+=/, "bunfig.toml not created");
-          }
-        },
-      );
-    });
-  }
+        const bun = new Bun(dir);
+        if (await bun.isNpmrcSupported()) {
+          const npmrcPath = path.join(dir, ".npmrc");
+          const npmRc = await readTextFile(npmrcPath);
+          assert.ok(
+            npmRc.includes("@jsr:registry=https://npm.jsr.io"),
+            "Missing npmrc registry",
+          );
+        } else {
+          const config = await readTextFile(path.join(dir, "bunfig.toml"));
+          assert.match(config, /"@jsr"\s+=/, "bunfig.toml not created");
+        }
+      },
+    );
+  });
 
   describe("env detection", () => {
     it("detect pnpm from npm_config_user_agent", async () => {
@@ -579,26 +575,24 @@ describe("install", () => {
       });
     });
 
-    if (process.platform !== "win32") {
-      it("detect bun from npm_config_user_agent", async () => {
-        await withTempEnv(
-          ["i", "@std/encoding@0.216.0"],
-          async (dir) => {
-            assert.ok(
-              await isFile(path.join(dir, "bun.lock")),
-              "bun lockfile not created",
-            );
+    it("detect bun from npm_config_user_agent", async () => {
+      await withTempEnv(
+        ["i", "@std/encoding@0.216.0"],
+        async (dir) => {
+          assert.ok(
+            await isFile(path.join(dir, "bun.lock")),
+            "bun lockfile not created",
+          );
+        },
+        {
+          env: {
+            ...process.env,
+            npm_config_user_agent:
+              `bun/1.0.29 ${process.env.npm_config_user_agent}`,
           },
-          {
-            env: {
-              ...process.env,
-              npm_config_user_agent:
-                `bun/1.0.29 ${process.env.npm_config_user_agent}`,
-            },
-          },
-        );
-      });
-    }
+        },
+      );
+    });
   });
 });
 
@@ -673,8 +667,7 @@ describe("publish", () => {
         "export const value = 42;",
       );
 
-      // TODO: Change this once deno supports jsr.json
-      await writeJson<DenoJson>(path.join(dir, "deno.json"), {
+      await writeJson<DenoJson>(path.join(dir, "jsr.json"), {
         name: "@deno/jsr-cli-test",
         version: pkgJson.version!,
         license: "MIT",
@@ -767,8 +760,7 @@ describe("publish", () => {
           "export const value = 42;",
         );
 
-        // TODO: Change this once deno supports jsr.json
-        await writeJson<DenoJson>(path.join(dir, "deno.json"), {
+        await writeJson<DenoJson>(path.join(dir, "jsr.json"), {
           name: "@deno/jsr-cli-test",
           version: "1.0.0",
           license: "MIT",
@@ -790,8 +782,7 @@ describe("publish", () => {
           "export const value = 42;",
         );
 
-        // TODO: Change this once deno supports jsr.json
-        await writeJson<DenoJson>(path.join(dir, "deno.json"), {
+        await writeJson<DenoJson>(path.join(dir, "jsr.json"), {
           name: "@deno/jsr-cli-test",
           version: "1.0.0",
           license: "MIT",
@@ -871,7 +862,7 @@ describe("show", () => {
       true,
     );
 
-    assert.ok(output.combined.includes("latest: -"));
+    assert.ok(output.combined.includes("latest: " + styleText("magenta", "-")));
     assert.ok(output.combined.includes("npm tarball:"));
   });
 });

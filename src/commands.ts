@@ -8,10 +8,15 @@ import {
   JsrPackage,
   styleText,
   timeAgo,
-} from "./utils";
-import { Bun, getPkgManager, PkgManagerName, YarnBerry } from "./pkg_manager";
-import { downloadDeno, getDenoDownloadUrl } from "./download";
-import { getNpmPackageInfo, getPackageMeta } from "./api";
+} from "./utils.ts";
+import {
+  Bun,
+  getPkgManager,
+  type PkgManagerName,
+  YarnBerry,
+} from "./pkg_manager.ts";
+import { downloadDeno, getDenoDownloadUrl } from "./download.ts";
+import { getNpmPackageInfo, getPackageMeta } from "./api.ts";
 import semiver from "semiver";
 
 const NPMRC_FILE = ".npmrc";

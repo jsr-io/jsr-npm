@@ -28,11 +28,18 @@ export async function runJsr(
 ) {
   const bin = path.join(__dirname, "..", "src", "bin.ts");
 
-  return await exec("node", ["--experimental-strip-types", bin, ...args], cwd, {
-    ...process.env,
-    npm_config_user_agent: undefined,
-    ...env,
-  }, captureOutput);
+  return await exec(
+    "node",
+    ["--no-warnings", "--experimental-strip-types", bin, ...args],
+    cwd,
+    {
+      ...process.env,
+      npm_config_user_agent: undefined,
+      ...env,
+      NO_COLOR: "true",
+    },
+    captureOutput,
+  );
 }
 
 export async function runInTempDir(fn: (dir: string) => Promise<void>) {

@@ -263,8 +263,14 @@ export async function exec(
 
   return new Promise<ExecOutput>((resolve, reject) => {
     cp.on("exit", (code) => {
-      if (code === 0) resolve({ combined, stdout, stderr });
-      else reject(new ExecError(code ?? 1));
+      if (code === 0) {
+        resolve({ combined, stdout, stderr });
+      } else {
+        console.log(`Command: ${cmd} ${args.join(" ")}`);
+        console.log(`CWD: ${cwd}`);
+        console.log(`Output: ${combined}`);
+        reject(new ExecError(code ?? 1));
+      }
     });
   });
 }

@@ -6,8 +6,8 @@ import {
   fileExists,
   getNewLineChars,
   JsrPackage,
-  timeAgo,
   styleText,
+  timeAgo,
 } from "./utils";
 import { Bun, getPkgManager, PkgManagerName, YarnBerry } from "./pkg_manager";
 import { downloadDeno, getDenoDownloadUrl } from "./download";

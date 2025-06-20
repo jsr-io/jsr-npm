@@ -17,9 +17,9 @@
     }
   },
   "scripts": {
-    "test": "node --test --experimental-strip-types test/**.test.ts",
-    "test:coverage": "node --test --experimental-strip-types --experimental-test-coverage test/**.test.ts",
-    "cli": "node --experimental-strip-types src/bin.ts",
+    "test": "node --no-warnings --test --experimental-strip-types test/**.test.ts",
+    "test:coverage": "node --no-warnings --test --experimental-strip-types --experimental-test-coverage test/**.test.ts",
+    "cli": "node --no-warnings --experimental-strip-types src/bin.ts",
     "build": "rimraf dist dist-esm && tsc && tsc -p tsconfig.esm.json",
     "prepack": "node --run build"
   },

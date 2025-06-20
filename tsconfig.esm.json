@@ -3,9 +3,10 @@
   "compilerOptions": {
     "module": "NodeNext",
     "target": "ESNext",
-    "strict": true,
-    "outDir": "dist-esm/",
-    "declaration": true
+    "moduleResolution": "NodeNext",
+    "outDir": "dist-esm/"
   },
-  "include": ["src"]
+  "include": ["src"],
+  // we don't want to compile the bin file in ESM mode
+  "exclude": ["src/bin.ts"]
 }

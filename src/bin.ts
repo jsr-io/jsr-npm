@@ -22,17 +22,6 @@ import {
 import type { PkgManagerName } from "./pkg_manager.ts";
 
 const args = process.argv.slice(2);
-let __dirname: string;
-
-// @ts-ignore
-if (import.meta.url) {
-  // @ts-ignore
-  __dirname = path.dirname(new URL(import.meta.url).pathname);
-} else {
-  // For Node.js environments that do not support import.meta.url
-  // which means commonjs environments.
-  __dirname = globalThis.__dirname;
-}
 
 function prettyPrintRow(rows: [string, string][]) {
   let max = 0;
@@ -149,7 +138,7 @@ if (args.length === 0) {
   process.exit(0);
 } else if (args.some((arg) => arg === "-v" || arg === "--version")) {
   const version = JSON.parse(
-    fs.readFileSync(path.join(__dirname, "..", "package.json"), "utf-8"),
+    fs.readFileSync(path.resolve(process.cwd(), "..", "package.json"), "utf-8"),
   ).version as string;
   console.log(version);
   process.exit(0);
@@ -159,7 +148,7 @@ if (args.length === 0) {
   // `deno publish` cli is under active development and args may change
   // frequently.
   if (cmd === "publish") {
-    const binFolder = path.join(__dirname, "..", ".download");
+    const binFolder = path.resolve(process.cwd(), ".download");
     run(async () => {
       const projectInfo = await findProjectDir(process.cwd());
       return publish(process.cwd(), {

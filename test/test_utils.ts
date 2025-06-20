@@ -36,7 +36,6 @@ export async function runJsr(
       ...process.env,
       npm_config_user_agent: undefined,
       ...env,
-      NO_COLOR: "true",
     },
     captureOutput,
   );

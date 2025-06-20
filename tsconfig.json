@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
-    "allowImportingTsExtensions": true,
-    "declaration": true,
-    "erasableSyntaxOnly": true,
+    "target": "esnext",
     "module": "commonjs",
-    "outDir": "dist",
     "rewriteRelativeImportExtensions": true,
-    "rootDir": "src",
+    "erasableSyntaxOnly": true,
+    "esModuleInterop": true,
+    "outDir": "dist",
+    "strict": true,
+    "declaration": true,
     "sourceMap": true
   },
   "include": ["src"]

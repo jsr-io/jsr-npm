@@ -4,8 +4,10 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as util from "node:util";
 import * as stream from "node:stream";
-import * as StreamZip from "node-stream-zip";
+import StreamZipPkg from "node-stream-zip";
 import { styleText } from "./utils.ts";
+
+const { async } = StreamZipPkg;
 
 const streamFinished = util.promisify(stream.finished);
 
@@ -95,7 +97,7 @@ export async function downloadDeno(
       const file = path.join(binFolder, info.filename);
       await fs.promises.rename(tmpFile, file);
 
-      const zip = new StreamZip.async({ file });
+      const zip = new async({ file });
       await zip.extract(null, binFolder);
       await zip.close();
 

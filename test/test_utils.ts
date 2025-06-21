@@ -26,7 +26,7 @@ export async function runJsr(
   env: Record<string, string> = {},
   captureOutput = false,
 ) {
-  const bin = path.join(__dirname, "..", "src", "bin.ts");
+  const bin = path.resolve(__dirname, "..", "src", "bin.ts");
 
   return await exec(
     "node",

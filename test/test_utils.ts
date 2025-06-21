@@ -10,8 +10,6 @@ export interface DenoJson {
   license: string;
 }
 
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
-
 /**
  * This sets the `packageManager` field in the `package.json` of the
  * specified directory to be the latest modern stable version of yarn.
@@ -26,7 +24,7 @@ export async function runJsr(
   env: Record<string, string> = {},
   captureOutput = false,
 ) {
-  const bin = path.resolve(__dirname, "..", "src", "bin.ts");
+  const bin = path.resolve("src", "bin.ts");
 
   return await exec(
     "node",

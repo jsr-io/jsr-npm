@@ -38,6 +38,7 @@ export async function runJsr(
 ) {
   const bin = path.resolve("src", "bin.ts");
   const testutils = path.resolve("test", "test_utils.ts");
+  console.log(`testUtils: ${testutils}`);
 
   return await exec(
     "node",

@@ -43,7 +43,7 @@ export async function runJsr(
     [
       "--no-warnings",
       "--import",
-      import.meta.resolve('./test_utils.ts'),
+      import.meta.resolve("./test_utils.ts"),
       "--experimental-strip-types",
       bin,
       ...args,

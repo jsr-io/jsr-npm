@@ -18,7 +18,9 @@ export interface DenoJson {
  * So we need to deifnefpr test context.
  */
 if (isMainThread && "register" in module) {
-  const __dirname = path.dirname(new URL(import.meta.url).pathname);
+  const __dirname = path.dirname(
+    module.createRequire(import.meta.url).resolve("./test_utils.ts"),
+  );
   globalThis.__dirname = __dirname;
 }
 

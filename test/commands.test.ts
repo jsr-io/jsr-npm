@@ -752,8 +752,6 @@ describe("publish", () => {
   // Windows doesn't support #!/usr/bin/env
   if (process.platform !== "win32") {
     it("use deno binary from DENO_BIN_PATH when set", async () => {
-      const __dirname = path.dirname(new URL(import.meta.url).pathname);
-
       await runInTempDir(async (dir) => {
         await writeTextFile(
           path.join(dir, "mod.ts"),
@@ -770,7 +768,7 @@ describe("publish", () => {
         });
 
         await runJsr(["publish", "--dry-run", "--non-existant-option"], dir, {
-          DENO_BIN_PATH: path.join(__dirname, "fixtures", "dummy.js"),
+          DENO_BIN_PATH: path.join(import.meta.dirname, "fixtures", "dummy.js"),
         });
       });
     });

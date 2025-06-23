@@ -37,15 +37,13 @@ export async function runJsr(
   captureOutput = false,
 ) {
   const bin = path.resolve("src", "bin.ts");
-  const testutils = path.resolve("test", "test_utils.ts");
-  console.log(`testUtils: ${testutils}`);
 
   return await exec(
     "node",
     [
       "--no-warnings",
       "--import",
-      testutils,
+      import.meta.resolve('./test_utils.ts'),
       "--experimental-strip-types",
       bin,
       ...args,

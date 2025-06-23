@@ -1,6 +1,8 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
+import * as module from "node:module";
+import { isMainThread } from "node:worker_threads";
 import { exec, writeJson } from "../src/utils.ts";
 
 export interface DenoJson {
@@ -8,6 +10,16 @@ export interface DenoJson {
   version: string;
   exports: string | Record<string, string>;
   license: string;
+}
+
+/**
+ * By default when node run ts file it's in ESM context so __dirname is not defined.
+ * But we use it in source code and `tsc` transpiles to ESM/CJS
+ * So we need to deifnefpr test context.
+ */
+if (isMainThread && "register" in module) {
+  const __dirname = path.dirname(new URL(import.meta.url).pathname);
+  globalThis.__dirname = __dirname;
 }
 
 /**
@@ -25,10 +37,18 @@ export async function runJsr(
   captureOutput = false,
 ) {
   const bin = path.resolve("src", "bin.ts");
+  const testutils = path.resolve("test", "test_utils.ts");
 
   return await exec(
     "node",
-    ["--no-warnings", "--experimental-strip-types", bin, ...args],
+    [
+      "--no-warnings",
+      "--import",
+      testutils,
+      "--experimental-strip-types",
+      bin,
+      ...args,
+    ],
     cwd,
     {
       ...process.env,

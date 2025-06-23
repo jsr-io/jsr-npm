@@ -138,7 +138,7 @@ if (args.length === 0) {
   process.exit(0);
 } else if (args.some((arg) => arg === "-v" || arg === "--version")) {
   const version = JSON.parse(
-    fs.readFileSync(path.resolve(process.cwd(), "..", "package.json"), "utf-8"),
+    fs.readFileSync(path.join(__dirname, "..", "package.json"), "utf-8"),
   ).version as string;
   console.log(version);
   process.exit(0);
@@ -148,7 +148,8 @@ if (args.length === 0) {
   // `deno publish` cli is under active development and args may change
   // frequently.
   if (cmd === "publish") {
-    const binFolder = path.resolve(process.cwd(), ".download");
+    const binFolder = path.join(__dirname, "..", ".download");
+
     run(async () => {
       const projectInfo = await findProjectDir(process.cwd());
       return publish(process.cwd(), {

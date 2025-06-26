@@ -1,13 +1,25 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
-import { exec, writeJson } from "../src/utils";
+import * as module from "node:module";
+import { isMainThread } from "node:worker_threads";
+import { exec, writeJson } from "../src/utils.ts";
 
 export interface DenoJson {
   name: string;
   version: string;
   exports: string | Record<string, string>;
   license: string;
+}
+
+/**
+ * By default when node run ts file it's in ESM context so __dirname is not defined.
+ * But we use it in source code and `tsc` transpiles to ESM/CJS
+ * So we need to deifnefpr test context.
+ */
+if (isMainThread && "register" in module) {
+  const __dirname = import.meta.dirname;
+  globalThis.__dirname = __dirname;
 }
 
 /**
@@ -24,13 +36,26 @@ export async function runJsr(
   env: Record<string, string> = {},
   captureOutput = false,
 ) {
-  const bin = path.join(__dirname, "..", "src", "bin.ts");
-  const tsNode = path.join(__dirname, "..", "node_modules", ".bin", "ts-node");
-  return await exec(tsNode, [bin, ...args], cwd, {
-    ...process.env,
-    npm_config_user_agent: undefined,
-    ...env,
-  }, captureOutput);
+  const bin = path.resolve("src", "bin.ts");
+
+  return await exec(
+    "node",
+    [
+      "--no-warnings",
+      "--import",
+      import.meta.resolve("./test_utils.ts"),
+      "--experimental-strip-types",
+      bin,
+      ...args,
+    ],
+    cwd,
+    {
+      ...process.env,
+      npm_config_user_agent: undefined,
+      ...env,
+    },
+    captureOutput,
+  );
 }
 
 export async function runInTempDir(fn: (dir: string) => Promise<void>) {

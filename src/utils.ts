@@ -2,8 +2,8 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
 import * as util from "node:util";
-import { PkgManagerName } from "./pkg_manager";
 import { spawn } from "node:child_process";
+import type { PkgManagerName } from "./pkg_manager.ts";
 
 export let DEBUG = false;
 export function setDebug(enabled: boolean) {
@@ -21,6 +21,19 @@ const EXTRACT_REG_PROXY = /^@jsr\/([a-z0-9-]+)__([a-z0-9-]+)(@(.+))?$/;
 export class JsrPackageNameError extends Error {}
 
 export class JsrPackage {
+  public scope: string;
+  public name: string;
+  public version: string | null;
+  private constructor(
+    scope: string,
+    name: string,
+    version: string | null,
+  ) {
+    this.scope = scope;
+    this.name = name;
+    this.version = version;
+  }
+
   static from(input: string) {
     const exactMatch = input.match(EXTRACT_REG);
     if (exactMatch !== null) {
@@ -42,12 +55,6 @@ export class JsrPackage {
       `Invalid jsr package name: A jsr package name must have the format @<scope>/<name>, but got "${input}"`,
     );
   }
-
-  private constructor(
-    public scope: string,
-    public name: string,
-    public version: string | null,
-  ) {}
 
   toNpmPackage(): string {
     const version = this.version !== null ? `@${this.version}` : "";
@@ -207,8 +214,11 @@ export function timeAgo(diff: number) {
 }
 
 export class ExecError extends Error {
-  constructor(public code: number) {
+  public code: number;
+
+  constructor(code: number) {
     super(`Child process exited with: ${code}`);
+    this.code = code;
   }
 }
 
@@ -253,8 +263,14 @@ export async function exec(
 
   return new Promise<ExecOutput>((resolve, reject) => {
     cp.on("exit", (code) => {
-      if (code === 0) resolve({ combined, stdout, stderr });
-      else reject(new ExecError(code ?? 1));
+      if (code === 0) {
+        resolve({ combined, stdout, stderr });
+      } else {
+        console.log(`Command: ${cmd} ${args.join(" ")}`);
+        console.log(`CWD: ${cwd}`);
+        console.log(`Output: ${combined}`);
+        reject(new ExecError(code ?? 1));
+      }
     });
   });
 }

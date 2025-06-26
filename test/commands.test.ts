@@ -1,25 +1,27 @@
-import * as path from "path";
-import * as fs from "fs";
+import * as path from "node:path";
+import * as fs from "node:fs";
+import * as assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import {
-  DenoJson,
+  type DenoJson,
   enableYarnBerry,
   isDirectory,
   isFile,
   runInTempDir,
   runJsr,
   withTempEnv,
-} from "./test_utils";
-import * as assert from "node:assert/strict";
+} from "./test_utils.ts";
 import {
   exec,
   ExecError,
-  PkgJson,
+  type PkgJson,
   readJson,
   readTextFile,
+  styleText,
   writeJson,
   writeTextFile,
-} from "../src/utils";
-import { Bun } from "../src/pkg_manager";
+} from "../src/utils.ts";
+import { Bun } from "../src/pkg_manager.ts";
 
 describe("general", () => {
   it("exit 1 on unknown command", async () => {
@@ -183,7 +185,8 @@ describe("install", () => {
 
       await runJsr(["i", "--pnpm", "@std/encoding"], path.join(dir, "sub"));
 
-      assert.deepEqual(
+      // in some case pnpm add `packageManager` key to package.json
+      assert.partialDeepStrictEqual(
         await readJson<PkgJson>(path.join(dir, "package.json")),
         parentPkgJson,
       );
@@ -271,23 +274,21 @@ describe("install", () => {
       });
     });
 
-    if (process.platform !== "win32") {
-      await withTempEnv(
-        ["i", "--bun", "--save-dev", "@std/encoding@0.216.0"],
-        async (dir) => {
-          assert.ok(
-            await isFile(path.join(dir, "bun.lock")),
-            "bun lockfile not created",
-          );
-          const pkgJson = await readJson<PkgJson>(
-            path.join(dir, "package.json"),
-          );
-          assert.deepEqual(pkgJson.devDependencies, {
-            "@std/encoding": "npm:@jsr/std__encoding@0.216.0",
-          });
-        },
-      );
-    }
+    await withTempEnv(
+      ["i", "--bun", "--save-dev", "@std/encoding@0.216.0"],
+      async (dir) => {
+        assert.ok(
+          await isFile(path.join(dir, "bun.lock")),
+          "bun lockfile not created",
+        );
+        const pkgJson = await readJson<PkgJson>(
+          path.join(dir, "package.json"),
+        );
+        assert.deepEqual(pkgJson.devDependencies, {
+          "@std/encoding": "npm:@jsr/std__encoding@0.216.0",
+        });
+      },
+    );
   });
 
   it("jsr add -O @std/encoding@0.216.0 - dev dependency", async () => {
@@ -327,23 +328,21 @@ describe("install", () => {
       });
     });
 
-    if (process.platform !== "win32") {
-      await withTempEnv(
-        ["i", "--bun", "--save-optional", "@std/encoding@0.216.0"],
-        async (dir) => {
-          assert.ok(
-            await isFile(path.join(dir, "bun.lock")),
-            "bun lockfile not created",
-          );
-          const pkgJson = await readJson<PkgJson>(
-            path.join(dir, "package.json"),
-          );
-          assert.deepEqual(pkgJson.optionalDependencies, {
-            "@std/encoding": "npm:@jsr/std__encoding@0.216.0",
-          });
-        },
-      );
-    }
+    await withTempEnv(
+      ["i", "--bun", "--save-optional", "@std/encoding@0.216.0"],
+      async (dir) => {
+        assert.ok(
+          await isFile(path.join(dir, "bun.lock")),
+          "bun lockfile not created",
+        );
+        const pkgJson = await readJson<PkgJson>(
+          path.join(dir, "package.json"),
+        );
+        assert.deepEqual(pkgJson.optionalDependencies, {
+          "@std/encoding": "npm:@jsr/std__encoding@0.216.0",
+        });
+      },
+    );
   });
 
   it("jsr i - runs '<pkg-manager> install' instead", async () => {
@@ -433,54 +432,53 @@ describe("install", () => {
     });
   });
 
-  if (process.platform !== "win32") {
-    it("jsr add --bun @std/encoding@0.216.0 - forces bun", async () => {
-      await withTempEnv(
-        ["i", "--bun", "@std/encoding@0.216.0"],
-        async (dir) => {
+  it("jsr add --bun @std/encoding@0.216.0 - forces bun", async () => {
+    await withTempEnv(
+      ["i", "--bun", "@std/encoding@0.216.0"],
+      async (dir) => {
+        assert.ok(
+          await isFile(path.join(dir, "bun.lock")),
+          "bun lockfile not created",
+        );
+
+        const bun = new Bun(dir);
+
+        if (await bun.isNpmrcSupported()) {
+          const npmrcPath = path.join(dir, ".npmrc");
+          const npmRc = await readTextFile(npmrcPath);
           assert.ok(
-            await isFile(path.join(dir, "bun.lock")),
-            "bun lockfile not created",
+            npmRc.includes("@jsr:registry=https://npm.jsr.io"),
+            "Missing npmrc registry",
           );
+        } else {
+          const config = await readTextFile(path.join(dir, "bunfig.toml"));
+          assert.match(config, /"@jsr"\s+=/, "bunfig.toml not created");
+        }
+      },
+    );
+  });
 
-          const bun = new Bun(dir);
+  it("jsr add --bun @std/encoding@0.216.0 - forces bun for twice", async () => {
+    await withTempEnv(
+      ["i", "--bun", "@std/encoding@0.216.0"],
+      async (dir) => {
+        await runJsr(["i", "--bun", "@std/encoding@0.216.0"], dir);
 
-          if (await bun.isNpmrcSupported()) {
-            const npmrcPath = path.join(dir, ".npmrc");
-            const npmRc = await readTextFile(npmrcPath);
-            assert.ok(
-              npmRc.includes("@jsr:registry=https://npm.jsr.io"),
-              "Missing npmrc registry",
-            );
-          } else {
-            const config = await readTextFile(path.join(dir, "bunfig.toml"));
-            assert.match(config, /"@jsr"\s+=/, "bunfig.toml not created");
-          }
-        },
-      );
-    });
-    it("jsr add --bun @std/encoding@0.216.0 - forces bun for twice", async () => {
-      await withTempEnv(
-        ["i", "--bun", "@std/encoding@0.216.0"],
-        async (dir) => {
-          await runJsr(["i", "--bun", "@std/encoding@0.216.0"], dir);
-
-          const bun = new Bun(dir);
-          if (await bun.isNpmrcSupported()) {
-            const npmrcPath = path.join(dir, ".npmrc");
-            const npmRc = await readTextFile(npmrcPath);
-            assert.ok(
-              npmRc.includes("@jsr:registry=https://npm.jsr.io"),
-              "Missing npmrc registry",
-            );
-          } else {
-            const config = await readTextFile(path.join(dir, "bunfig.toml"));
-            assert.match(config, /"@jsr"\s+=/, "bunfig.toml not created");
-          }
-        },
-      );
-    });
-  }
+        const bun = new Bun(dir);
+        if (await bun.isNpmrcSupported()) {
+          const npmrcPath = path.join(dir, ".npmrc");
+          const npmRc = await readTextFile(npmrcPath);
+          assert.ok(
+            npmRc.includes("@jsr:registry=https://npm.jsr.io"),
+            "Missing npmrc registry",
+          );
+        } else {
+          const config = await readTextFile(path.join(dir, "bunfig.toml"));
+          assert.match(config, /"@jsr"\s+=/, "bunfig.toml not created");
+        }
+      },
+    );
+  });
 
   describe("env detection", () => {
     it("detect pnpm from npm_config_user_agent", async () => {
@@ -577,26 +575,24 @@ describe("install", () => {
       });
     });
 
-    if (process.platform !== "win32") {
-      it("detect bun from npm_config_user_agent", async () => {
-        await withTempEnv(
-          ["i", "@std/encoding@0.216.0"],
-          async (dir) => {
-            assert.ok(
-              await isFile(path.join(dir, "bun.lock")),
-              "bun lockfile not created",
-            );
+    it("detect bun from npm_config_user_agent", async () => {
+      await withTempEnv(
+        ["i", "@std/encoding@0.216.0"],
+        async (dir) => {
+          assert.ok(
+            await isFile(path.join(dir, "bun.lock")),
+            "bun lockfile not created",
+          );
+        },
+        {
+          env: {
+            ...process.env,
+            npm_config_user_agent:
+              `bun/1.0.29 ${process.env.npm_config_user_agent}`,
           },
-          {
-            env: {
-              ...process.env,
-              npm_config_user_agent:
-                `bun/1.0.29 ${process.env.npm_config_user_agent}`,
-            },
-          },
-        );
-      });
-    }
+        },
+      );
+    });
   });
 });
 
@@ -657,7 +653,7 @@ describe("remove", () => {
 });
 
 describe("publish", () => {
-  it("should publish a package", async () => {
+  it("should publish a package", { timeout: 600000 }, async () => {
     await runInTempDir(async (dir) => {
       const pkgJsonPath = path.join(dir, "package.json");
       const pkgJson = await readJson<PkgJson>(pkgJsonPath);
@@ -671,8 +667,7 @@ describe("publish", () => {
         "export const value = 42;",
       );
 
-      // TODO: Change this once deno supports jsr.json
-      await writeJson<DenoJson>(path.join(dir, "deno.json"), {
+      await writeJson<DenoJson>(path.join(dir, "jsr.json"), {
         name: "@deno/jsr-cli-test",
         version: pkgJson.version!,
         license: "MIT",
@@ -683,9 +678,11 @@ describe("publish", () => {
 
       await runJsr(["publish", "--dry-run"], dir);
     });
-  }).timeout(600000);
+  });
 
-  it("should not add unstable publish flags for a Deno project", async () => {
+  it("should not add unstable publish flags for a Deno project", {
+    timeout: 600000,
+  }, async () => {
     await runInTempDir(async (dir) => {
       const pkgJsonPath = path.join(dir, "package.json");
       await fs.promises.rm(pkgJsonPath);
@@ -711,7 +708,7 @@ describe("publish", () => {
         assert.ok(err instanceof ExecError, `Unknown exec error thrown`);
       }
     });
-  }).timeout(600000);
+  });
 
   it("should leave node_modules as is", async () => {
     await runInTempDir(async (dir) => {
@@ -761,8 +758,7 @@ describe("publish", () => {
           "export const value = 42;",
         );
 
-        // TODO: Change this once deno supports jsr.json
-        await writeJson<DenoJson>(path.join(dir, "deno.json"), {
+        await writeJson<DenoJson>(path.join(dir, "jsr.json"), {
           name: "@deno/jsr-cli-test",
           version: "1.0.0",
           license: "MIT",
@@ -772,7 +768,7 @@ describe("publish", () => {
         });
 
         await runJsr(["publish", "--dry-run", "--non-existant-option"], dir, {
-          DENO_BIN_PATH: path.join(__dirname, "fixtures", "dummy.js"),
+          DENO_BIN_PATH: path.join(import.meta.dirname, "fixtures", "dummy.js"),
         });
       });
     });
@@ -784,8 +780,7 @@ describe("publish", () => {
           "export const value = 42;",
         );
 
-        // TODO: Change this once deno supports jsr.json
-        await writeJson<DenoJson>(path.join(dir, "deno.json"), {
+        await writeJson<DenoJson>(path.join(dir, "jsr.json"), {
           name: "@deno/jsr-cli-test",
           version: "1.0.0",
           license: "MIT",
@@ -865,7 +860,7 @@ describe("show", () => {
       true,
     );
 
-    assert.ok(output.combined.includes("latest: -"));
+    assert.ok(output.combined.includes("latest: " + styleText("magenta", "-")));
     assert.ok(output.combined.includes("npm tarball:"));
   });
 });

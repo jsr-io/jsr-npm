@@ -9,7 +9,7 @@ import {
   remove,
   runScript,
   showPackageInfo,
-} from "./commands";
+} from "./commands.ts";
 import {
   ExecError,
   findProjectDir,
@@ -18,8 +18,8 @@ import {
   prettyTime,
   setDebug,
   styleText,
-} from "./utils";
-import { PkgManagerName } from "./pkg_manager";
+} from "./utils.ts";
+import type { PkgManagerName } from "./pkg_manager.ts";
 
 const args = process.argv.slice(2);
 
@@ -149,6 +149,7 @@ if (args.length === 0) {
   // frequently.
   if (cmd === "publish") {
     const binFolder = path.join(__dirname, "..", ".download");
+
     run(async () => {
       const projectInfo = await findProjectDir(process.cwd());
       return publish(process.cwd(), {

@@ -1,9 +1,14 @@
 // Copyright 2024 the JSR authors. MIT license.
-import { getLatestPackageVersion } from "./api";
-import { InstallOptions } from "./commands";
-import { exec, findProjectDir, JsrPackage, logDebug } from "./utils";
-import { styleText } from "./utils";
 import semiver from "semiver";
+import { getLatestPackageVersion } from "./api.ts";
+import type { InstallOptions } from "./commands.ts";
+import {
+  exec,
+  findProjectDir,
+  JsrPackage,
+  logDebug,
+  styleText,
+} from "./utils.ts";
 
 async function execWithLog(cmd: string, args: string[], cwd: string) {
   console.log(styleText("dim", `$ ${cmd} ${args.join(" ")}`));
@@ -53,7 +58,11 @@ export interface PackageManager {
 }
 
 class Npm implements PackageManager {
-  constructor(public cwd: string) {}
+  public cwd: string;
+
+  constructor(cwd: string) {
+    this.cwd = cwd;
+  }
 
   async install(packages: JsrPackage[], options: InstallOptions) {
     const args = ["install"];
@@ -80,7 +89,11 @@ class Npm implements PackageManager {
 }
 
 class Yarn implements PackageManager {
-  constructor(public cwd: string) {}
+  public cwd: string;
+
+  constructor(cwd: string) {
+    this.cwd = cwd;
+  }
 
   async install(packages: JsrPackage[], options: InstallOptions) {
     const args = ["add"];
@@ -133,7 +146,11 @@ export class YarnBerry extends Yarn {
 }
 
 class Pnpm implements PackageManager {
-  constructor(public cwd: string) {}
+  public cwd: string;
+
+  constructor(cwd: string) {
+    this.cwd = cwd;
+  }
 
   async install(packages: JsrPackage[], options: InstallOptions) {
     const args = ["add"];
@@ -159,7 +176,11 @@ class Pnpm implements PackageManager {
 }
 
 export class Bun implements PackageManager {
-  constructor(public cwd: string) {}
+  public cwd: string;
+
+  constructor(cwd: string) {
+    this.cwd = cwd;
+  }
 
   async install(packages: JsrPackage[], options: InstallOptions) {
     const args = ["add"];

@@ -1,13 +1,14 @@
-import * as assert from "assert/strict";
+import * as assert from "node:assert/strict";
 import * as path from "node:path";
-import { runInTempDir } from "./test_utils";
+import { describe, it } from "node:test";
+import { runInTempDir } from "./test_utils.ts";
 import {
   findProjectDir,
   JsrPackage,
-  PkgJson,
+  type PkgJson,
   writeJson,
   writeTextFile,
-} from "../src/utils";
+} from "../src/utils.ts";
 
 describe("findProjectDir", () => {
   it("should return npm if package-lock.json is found", async () => {

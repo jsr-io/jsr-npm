@@ -52,7 +52,12 @@ export async function getDenoDownloadUrl(
       } version information from ${url}.`,
     );
   }
-  const version = (await res.text()).trim();
+  let version = (await res.text()).trim();
+  // TODO(bartlomieju): temporary workaround for https://github.com/jsr-io/jsr-npm/issues/129
+  // until it's fixed upstream in Deno
+  if (!canary) {
+    version = "v2.3.7"
+  }
 
   return {
     canary,

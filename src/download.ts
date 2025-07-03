@@ -56,7 +56,7 @@ export async function getDenoDownloadUrl(
   // TODO(bartlomieju): temporary workaround for https://github.com/jsr-io/jsr-npm/issues/129
   // until it's fixed upstream in Deno
   if (!canary) {
-    version = "v2.3.7"
+    version = "v2.3.7";
   }
 
   return {

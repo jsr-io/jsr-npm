@@ -1,4 +1,5 @@
-// Copyright 2024 the JSR authors. MIT license.
+// Copyright the JSR authors. MIT license.
+
 import semiver from "semiver";
 import { getLatestPackageVersion } from "./api.ts";
 import type { InstallOptions } from "./commands.ts";

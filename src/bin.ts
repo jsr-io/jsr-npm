@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Copyright 2024 the JSR authors. MIT license.
+// Copyright the JSR authors. MIT license.
+
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { parseArgs } from "node:util";

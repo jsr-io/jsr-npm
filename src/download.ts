@@ -1,4 +1,5 @@
-// Copyright 2024 the JSR authors. MIT license.
+// Copyright the JSR authors. MIT license.
+
 import * as os from "node:os";
 import * as fs from "node:fs";
 import * as path from "node:path";
@@ -6,6 +7,7 @@ import * as util from "node:util";
 import * as stream from "node:stream";
 import StreamZipPkg from "node-stream-zip";
 import { styleText } from "./utils.ts";
+import { denoVersionInfo } from "./deno_version.ts"
 
 const { async } = StreamZipPkg;
 
@@ -56,7 +58,7 @@ async function getDenoVersionToDownload(canary: boolean) {
   if (canary) {
     return await getLatestCanary();
   } else {
-    return "v2.6.6";
+    return denoVersionInfo.version;
   }
 }
 

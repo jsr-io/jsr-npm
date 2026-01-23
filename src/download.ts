@@ -7,7 +7,7 @@ import * as util from "node:util";
 import * as stream from "node:stream";
 import StreamZipPkg from "node-stream-zip";
 import { styleText } from "./utils.ts";
-import { denoVersionInfo } from "./deno_version.ts"
+import { denoVersionInfo } from "./deno_version.ts";
 
 const { async } = StreamZipPkg;
 

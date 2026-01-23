@@ -3,7 +3,10 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-const DENO_VERSION_FILE = path.join(import.meta.dirname, "../src/deno_version.ts");
+const DENO_VERSION_FILE = path.join(
+  import.meta.dirname,
+  "../src/deno_version.ts",
+);
 
 async function main() {
   console.log("Fetching latest Deno version...");
@@ -30,7 +33,7 @@ async function getLatestDenoVersion(): Promise<string> {
 
   if (!res.ok) {
     throw new Error(
-      `Failed to fetch latest Deno version: ${res.status} ${res.statusText}`
+      `Failed to fetch latest Deno version: ${res.status} ${res.statusText}`,
     );
   }
 

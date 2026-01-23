@@ -56,7 +56,7 @@ async function getDenoVersionToDownload(canary: boolean) {
   if (canary) {
     return await getLatestCanary();
   } else {
-    return "v2.6.5";
+    return "v2.6.6";
   }
 }
 

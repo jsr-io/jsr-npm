@@ -43,7 +43,7 @@ async function getLatestDenoVersion(): Promise<string> {
 
 async function updateDenoVersion(version: string): Promise<void> {
   const content = `export const denoVersionInfo = {
-  version: "${version}"
+  version: "${version}",
 };
 `;
   await fs.promises.writeFile(DENO_VERSION_FILE, content, "utf-8");

@@ -1,6 +1,6 @@
 {
   "name": "jsr",
-  "version": "0.14.1",
+  "version": "0.14.2",
   "description": "jsr.io package manager for npm, yarn, pnpm and bun",
   "repository": {
     "type": "git",

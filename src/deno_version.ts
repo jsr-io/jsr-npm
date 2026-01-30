@@ -1,3 +1,3 @@
 export const denoVersionInfo = {
-  version: "v2.6.7"
+  version: "v2.6.7",
 };

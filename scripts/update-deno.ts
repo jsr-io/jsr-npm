@@ -60,8 +60,7 @@ async function fetchHashes(
 
   for (const name of FILENAMES) {
     const filename = `${name}.zip`;
-    const url =
-      `https://dl.deno.land/release/${version}/${filename}.sha256sum`;
+    const url = `https://dl.deno.land/release/${version}/${filename}.sha256sum`;
     const res = await fetch(url);
     if (!res.ok) {
       throw new Error(

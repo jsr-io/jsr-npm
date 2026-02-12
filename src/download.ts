@@ -1,5 +1,6 @@
 // Copyright the JSR authors. MIT license.
 
+import * as crypto from "node:crypto";
 import * as os from "node:os";
 import * as fs from "node:fs";
 import * as path from "node:path";
@@ -96,9 +97,11 @@ export async function downloadDeno(
     async (tick) => {
       const tmpFile = path.join(binFolder, info.filename + ".part");
       const writable = fs.createWriteStream(tmpFile, "utf-8");
+      const hash = crypto.createHash("sha256");
 
       for await (const chunk of streamToAsyncIterable(res.body!)) {
         tick(chunk.length);
+        hash.update(chunk);
         writable.write(chunk);
       }
 
@@ -106,6 +109,20 @@ export async function downloadDeno(
       await streamFinished(writable);
       const file = path.join(binFolder, info.filename);
       await fs.promises.rename(tmpFile, file);
+
+      // verify hash for release builds
+      const expectedHash = denoVersionInfo.hashes[info.filename];
+      if (!info.canary && expectedHash) {
+        const actualHash = hash.digest("hex");
+        if (actualHash !== expectedHash) {
+          await fs.promises.rm(file);
+          throw new Error(
+            `Hash mismatch for ${info.filename}:\n` +
+              `  expected: ${expectedHash}\n` +
+              `  actual:   ${actualHash}`,
+          );
+        }
+      }
 
       const zip = new async({ file });
       await zip.extract(null, binFolder);

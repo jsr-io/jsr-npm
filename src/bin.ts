@@ -94,8 +94,8 @@ ${
       ],
       ["--allow-slow-types", "Allow publishing with slow types."],
       [
-        "--provenance",
-        "From CI/CD system, publicly links the package to where it was built and published from.",
+        "--no-provenance",
+        "Disable provenance attestation. Enabled by default on GitHub Actions.",
       ],
     ])
   }

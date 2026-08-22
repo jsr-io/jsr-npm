@@ -652,6 +652,99 @@ describe("remove", () => {
   });
 });
 
+describe("global install/remove", () => {
+  it("jsr i -g installs jsr and npm packages globally", async () => {
+    await runInTempDir(async (dir) => {
+      // Redirect npm's global prefix and user-level config into the temp
+      // dir so the test doesn't touch the real global install location.
+      const prefix = path.join(dir, "npm-global");
+      const userNpmRc = path.join(dir, "user-npmrc");
+      const env = {
+        npm_config_prefix: prefix,
+        NPM_CONFIG_USERCONFIG: userNpmRc,
+      };
+
+      await runJsr(
+        ["i", "-g", "--npm", "@std/encoding@0.216.0", "semiver"],
+        dir,
+        env,
+      );
+
+      const globalModules = process.platform === "win32"
+        ? path.join(prefix, "node_modules")
+        : path.join(prefix, "lib", "node_modules");
+
+      assert.ok(
+        await isDirectory(path.join(globalModules, "@std", "encoding")),
+        "JSR package not installed globally",
+      );
+      assert.ok(
+        await isDirectory(path.join(globalModules, "semiver")),
+        "npm package not installed globally",
+      );
+
+      // The registry mapping must be written to the user-level npmrc,
+      // because global installs don't read the project .npmrc.
+      const npmRc = await readTextFile(userNpmRc);
+      assert.ok(
+        npmRc.includes("@jsr:registry=https://npm.jsr.io"),
+        "Missing registry mapping in user-level npmrc",
+      );
+      assert.ok(
+        !(await isFile(path.join(dir, ".npmrc"))),
+        "Project .npmrc should not be created",
+      );
+
+      // Project package.json must stay untouched
+      const pkgJson = await readJson<PkgJson>(path.join(dir, "package.json"));
+      assert.equal(pkgJson.dependencies, undefined);
+
+      await runJsr(["r", "-g", "--npm", "@std/encoding", "semiver"], dir, env);
+      assert.ok(
+        !(await isDirectory(path.join(globalModules, "@std", "encoding"))),
+        "JSR package not removed globally",
+      );
+      assert.ok(
+        !(await isDirectory(path.join(globalModules, "semiver"))),
+        "npm package not removed globally",
+      );
+    });
+  });
+
+  it("jsr i -g exits 1 without packages", async () => {
+    await runInTempDir(async (dir) => {
+      try {
+        await runJsr(["i", "-g", "--npm"], dir);
+        assert.fail("no");
+      } catch (err) {
+        assert.equal((err as any).code, 1);
+      }
+    });
+  });
+
+  it("jsr i -g exits 1 with invalid package name", async () => {
+    await runInTempDir(async (dir) => {
+      try {
+        await runJsr(["i", "-g", "--npm", "!invalid!"], dir);
+        assert.fail("no");
+      } catch (err) {
+        assert.equal((err as any).code, 1);
+      }
+    });
+  });
+
+  it("plain npm packages are still rejected without -g", async () => {
+    await runInTempDir(async (dir) => {
+      try {
+        await runJsr(["i", "--npm", "semiver"], dir);
+        assert.fail("no");
+      } catch (err) {
+        assert.equal((err as any).code, 1);
+      }
+    });
+  });
+});
+
 describe("publish", () => {
   it("should publish a package", { timeout: 600000 }, async () => {
     await runInTempDir(async (dir) => {

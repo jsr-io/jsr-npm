@@ -18,8 +18,11 @@ export function logDebug(msg: string) {
 
 const EXTRACT_REG = /^@([a-z0-9-]+)\/([a-z0-9-]+)(@(.+))?$/;
 const EXTRACT_REG_PROXY = /^@jsr\/([a-z0-9-]+)__([a-z0-9-]+)(@(.+))?$/;
+const EXTRACT_REG_NPM =
+  /^(@([a-z0-9-~][a-z0-9-._~]*)\/)?([a-z0-9-~][a-z0-9-._~]*)(@(.+))?$/;
 
 export class JsrPackageNameError extends Error {}
+export class NpmPackageNameError extends Error {}
 
 export class JsrPackage {
   public scope: string;
@@ -67,6 +70,44 @@ export class JsrPackage {
     return `@${this.scope}/${this.name}${version}`;
   }
 }
+
+export class NpmPackage {
+  public scope: string | null;
+  public name: string;
+  public version: string | null;
+  private constructor(
+    scope: string | null,
+    name: string,
+    version: string | null,
+  ) {
+    this.scope = scope;
+    this.name = name;
+    this.version = version;
+  }
+
+  static from(input: string): NpmPackage {
+    const match = input.match(EXTRACT_REG_NPM);
+    if (match === null) {
+      throw new NpmPackageNameError(`Invalid npm package name: "${input}"`);
+    }
+
+    const scope = match[2] ?? null;
+    const name = match[3];
+    const version = match[5] ?? null;
+
+    return new NpmPackage(scope, name, version);
+  }
+
+  toString() {
+    let s = this.scope !== null ? `@${this.scope}/` : "";
+    s += this.name;
+    if (this.version !== null) s += `@${this.version}`;
+    return s;
+  }
+}
+
+/** A package that can be installed: either from JSR or plain npm. */
+export type Package = JsrPackage | NpmPackage;
 
 export async function fileExists(file: string): Promise<boolean> {
   try {

@@ -8,8 +8,13 @@ import {
   findProjectDir,
   JsrPackage,
   logDebug,
+  type Package,
   styleText,
 } from "./utils.ts";
+
+export const GLOBAL_YARN_BERRY_ERROR =
+  "Installing or removing global packages is not supported by yarn 2+ (berry). " +
+  "Use --npm, --pnpm or --bun to choose a different package manager.";
 
 async function execWithLog(cmd: string, args: string[], cwd: string) {
   console.log(styleText("dim", `$ ${cmd} ${args.join(" ")}`));
@@ -28,9 +33,11 @@ function modeToFlagYarn(mode: InstallOptions["mode"]): string {
   return mode === "dev" ? "--dev" : mode === "optional" ? "--optional" : "";
 }
 
-function toPackageArgs(pkgs: JsrPackage[]): string[] {
-  return pkgs.map(
-    (pkg) => `@${pkg.scope}/${pkg.name}@npm:${pkg.toNpmPackage()}`,
+function toPackageArgs(pkgs: Package[]): string[] {
+  return pkgs.map((pkg) =>
+    pkg instanceof JsrPackage
+      ? `@${pkg.scope}/${pkg.name}@npm:${pkg.toNpmPackage()}`
+      : pkg.toString()
   );
 }
 
@@ -50,10 +57,14 @@ async function isYarnBerry(cwd: string) {
   return true;
 }
 
+export interface RemoveOptions {
+  global?: boolean;
+}
+
 export interface PackageManager {
   cwd: string;
-  install(packages: JsrPackage[], options: InstallOptions): Promise<void>;
-  remove(packages: JsrPackage[]): Promise<void>;
+  install(packages: Package[], options: InstallOptions): Promise<void>;
+  remove(packages: Package[], options?: RemoveOptions): Promise<void>;
   runScript(script: string): Promise<void>;
   setConfigValue?(key: string, value: string): Promise<void>;
 }
@@ -65,23 +76,27 @@ class Npm implements PackageManager {
     this.cwd = cwd;
   }
 
-  async install(packages: JsrPackage[], options: InstallOptions) {
+  async install(packages: Package[], options: InstallOptions) {
     const args = ["install"];
-    const mode = modeToFlag(options.mode);
-    if (mode !== "") {
-      args.push(mode);
+    if (options.global) {
+      // npm ignores --save-* flags for global installs
+      args.push("--global");
+    } else {
+      const mode = modeToFlag(options.mode);
+      if (mode !== "") {
+        args.push(mode);
+      }
     }
     args.push(...toPackageArgs(packages));
 
     await execWithLog("npm", args, this.cwd);
   }
 
-  async remove(packages: JsrPackage[]) {
-    await execWithLog(
-      "npm",
-      ["remove", ...packages.map((pkg) => pkg.toString())],
-      this.cwd,
-    );
+  async remove(packages: Package[], options?: RemoveOptions) {
+    const args = ["remove"];
+    if (options?.global) args.push("--global");
+    args.push(...packages.map((pkg) => pkg.toString()));
+    await execWithLog("npm", args, this.cwd);
   }
 
   async runScript(script: string) {
@@ -96,22 +111,22 @@ class Yarn implements PackageManager {
     this.cwd = cwd;
   }
 
-  async install(packages: JsrPackage[], options: InstallOptions) {
-    const args = ["add"];
-    const mode = modeToFlagYarn(options.mode);
-    if (mode !== "") {
-      args.push(mode);
+  async install(packages: Package[], options: InstallOptions) {
+    const args = options.global ? ["global", "add"] : ["add"];
+    if (!options.global) {
+      const mode = modeToFlagYarn(options.mode);
+      if (mode !== "") {
+        args.push(mode);
+      }
     }
     args.push(...toPackageArgs(packages));
     await execWithLog("yarn", args, this.cwd);
   }
 
-  async remove(packages: JsrPackage[]) {
-    await execWithLog(
-      "yarn",
-      ["remove", ...packages.map((pkg) => pkg.toString())],
-      this.cwd,
-    );
+  async remove(packages: Package[], options?: RemoveOptions) {
+    const args = options?.global ? ["global", "remove"] : ["remove"];
+    args.push(...packages.map((pkg) => pkg.toString()));
+    await execWithLog("yarn", args, this.cwd);
   }
 
   async runScript(script: string) {
@@ -120,7 +135,10 @@ class Yarn implements PackageManager {
 }
 
 export class YarnBerry extends Yarn {
-  async install(packages: JsrPackage[], options: InstallOptions) {
+  async install(packages: Package[], options: InstallOptions) {
+    if (options.global) {
+      throw new Error(GLOBAL_YARN_BERRY_ERROR);
+    }
     const args = ["add"];
     const mode = modeToFlagYarn(options.mode);
     if (mode !== "") {
@@ -130,6 +148,13 @@ export class YarnBerry extends Yarn {
     await execWithLog("yarn", args, this.cwd);
   }
 
+  async remove(packages: Package[], options?: RemoveOptions) {
+    if (options?.global) {
+      throw new Error(GLOBAL_YARN_BERRY_ERROR);
+    }
+    await super.remove(packages);
+  }
+
   /**
    * Calls the `yarn config set` command, https://yarnpkg.com/cli/config/set.
    */
@@ -137,10 +162,12 @@ export class YarnBerry extends Yarn {
     await execWithLog("yarn", ["config", "set", key, value], this.cwd);
   }
 
-  private async toPackageArgs(pkgs: JsrPackage[]) {
+  private async toPackageArgs(pkgs: Package[]) {
     // nasty workaround for https://github.com/yarnpkg/berry/issues/1816
     await Promise.all(pkgs.map(async (pkg) => {
-      pkg.version ??= `^${await getLatestPackageVersion(pkg)}`;
+      if (pkg instanceof JsrPackage) {
+        pkg.version ??= `^${await getLatestPackageVersion(pkg)}`;
+      }
     }));
     return toPackageArgs(pkgs);
   }
@@ -153,22 +180,25 @@ class Pnpm implements PackageManager {
     this.cwd = cwd;
   }
 
-  async install(packages: JsrPackage[], options: InstallOptions) {
+  async install(packages: Package[], options: InstallOptions) {
     const args = ["add"];
-    const mode = modeToFlag(options.mode);
-    if (mode !== "") {
-      args.push(mode);
+    if (options.global) {
+      args.push("--global");
+    } else {
+      const mode = modeToFlag(options.mode);
+      if (mode !== "") {
+        args.push(mode);
+      }
     }
     args.push(...toPackageArgs(packages));
     await execWithLog("pnpm", args, this.cwd);
   }
 
-  async remove(packages: JsrPackage[]) {
-    await execWithLog(
-      "pnpm",
-      ["remove", ...packages.map((pkg) => pkg.toString())],
-      this.cwd,
-    );
+  async remove(packages: Package[], options?: RemoveOptions) {
+    const args = ["remove"];
+    if (options?.global) args.push("--global");
+    args.push(...packages.map((pkg) => pkg.toString()));
+    await execWithLog("pnpm", args, this.cwd);
   }
 
   async runScript(script: string) {
@@ -183,22 +213,25 @@ export class Bun implements PackageManager {
     this.cwd = cwd;
   }
 
-  async install(packages: JsrPackage[], options: InstallOptions) {
+  async install(packages: Package[], options: InstallOptions) {
     const args = ["add"];
-    const mode = modeToFlagYarn(options.mode);
-    if (mode !== "") {
-      args.push(mode);
+    if (options.global) {
+      args.push("--global");
+    } else {
+      const mode = modeToFlagYarn(options.mode);
+      if (mode !== "") {
+        args.push(mode);
+      }
     }
     args.push(...toPackageArgs(packages));
     await execWithLog("bun", args, this.cwd);
   }
 
-  async remove(packages: JsrPackage[]) {
-    await execWithLog(
-      "bun",
-      ["remove", ...packages.map((pkg) => pkg.toString())],
-      this.cwd,
-    );
+  async remove(packages: Package[], options?: RemoveOptions) {
+    const args = ["remove"];
+    if (options?.global) args.push("--global");
+    args.push(...packages.map((pkg) => pkg.toString()));
+    await execWithLog("bun", args, this.cwd);
   }
 
   async runScript(script: string) {

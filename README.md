@@ -48,6 +48,29 @@ commands.
 - `run <script>`: Run a JSR package script.
 - `<script>`: Run a JSR package script without `run` command.
 
+## Global installs
+
+Pass `-g` or `--global` to install or remove packages globally:
+
+```sh
+npx jsr add -g @package/name
+```
+
+With `--global`, the `@jsr:registry` mapping is written to your user-level
+`.npmrc` (`~/.npmrc`) instead of the project one, since package managers don't
+read project configuration for global installs.
+
+Plain npm package names are also accepted with `--global`, so the `jsr` CLI can
+update itself:
+
+```sh
+jsr add -g jsr
+```
+
+> [!NOTE]
+> Global installs are not supported when using yarn 2+ (berry), as `yarn global`
+> was removed. Use `--npm`, `--pnpm` or `--bun` instead.
+
 ## Limitations
 
 - `jsr:` import specifiers are not supported.

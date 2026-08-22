@@ -60,16 +60,16 @@ With `--global`, the `@jsr:registry` mapping is written to your user-level
 `.npmrc` (`~/.npmrc`) instead of the project one, since package managers don't
 read project configuration for global installs.
 
-Plain npm package names are also accepted with `--global`, so the `jsr` CLI
-can update itself:
+Plain npm package names are also accepted with `--global`, so the `jsr` CLI can
+update itself:
 
 ```sh
 jsr add -g jsr
 ```
 
 > [!NOTE]
-> Global installs are not supported when using yarn 2+ (berry), as
-> `yarn global` was removed. Use `--npm`, `--pnpm` or `--bun` instead.
+> Global installs are not supported when using yarn 2+ (berry), as `yarn global`
+> was removed. Use `--npm`, `--pnpm` or `--bun` instead.
 
 ## Limitations
 

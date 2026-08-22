@@ -2,17 +2,20 @@
 
 import * as path from "node:path";
 import * as fs from "node:fs";
+import * as os from "node:os";
 import {
   exec,
   fileExists,
   getNewLineChars,
   JsrPackage,
+  type Package,
   styleText,
   timeAgo,
 } from "./utils.ts";
 import {
   Bun,
   getPkgManager,
+  GLOBAL_YARN_BERRY_ERROR,
   type PkgManagerName,
   YarnBerry,
 } from "./pkg_manager.ts";
@@ -39,9 +42,21 @@ async function wrapWithStatus(msg: string, fn: () => Promise<void>) {
   }
 }
 
+/**
+ * Path of the user-level npmrc that is consulted for global installs.
+ * Honors `NPM_CONFIG_USERCONFIG` like npm itself does.
+ */
+function getUserNpmRcPath(): string {
+  return process.env.NPM_CONFIG_USERCONFIG ??
+    path.join(os.homedir(), NPMRC_FILE);
+}
+
 export async function setupNpmRc(dir: string) {
-  const npmRcPath = path.join(dir, NPMRC_FILE);
-  const msg = `Setting up ${NPMRC_FILE}`;
+  await setupNpmRcAtPath(path.join(dir, NPMRC_FILE));
+}
+
+async function setupNpmRcAtPath(npmRcPath: string) {
+  const msg = `Setting up ${path.basename(npmRcPath)}`;
   try {
     let content = await fs.promises.readFile(npmRcPath, "utf-8");
     if (!content.includes("@jsr:registry=")) {
@@ -87,33 +102,49 @@ export async function setupBunfigToml(dir: string) {
 
 export interface BaseOptions {
   pkgManagerName: PkgManagerName | null;
+  global?: boolean;
 }
 
 export interface InstallOptions extends BaseOptions {
   mode: "dev" | "prod" | "optional";
 }
 
-export async function install(packages: JsrPackage[], options: InstallOptions) {
+export async function install(packages: Package[], options: InstallOptions) {
   const { pkgManager, root } = await getPkgManager(
     process.cwd(),
     options.pkgManagerName,
   );
+  const isGlobal = options.global ?? false;
+
+  if (isGlobal && pkgManager instanceof YarnBerry) {
+    throw new Error(GLOBAL_YARN_BERRY_ERROR);
+  }
 
   if (packages.length > 0) {
-    if (pkgManager instanceof Bun && !(await pkgManager.isNpmrcSupported())) {
-      // Bun v1.1.17 or lower doesn't support reading from .npmrc
-      // Bun v1.1.18+ supports npmrc
-      // https://bun.sh/blog/bun-v1.1.18#npmrc-support
-      await setupBunfigToml(root);
-    } else if (pkgManager instanceof YarnBerry) {
-      // Yarn v2+ does not read from .npmrc intentionally
-      // https://yarnpkg.com/migration/guide#update-your-configuration-to-the-new-settings
-      await pkgManager.setConfigValue(
-        JSR_YARN_BERRY_CONFIG_KEY,
-        JSR_NPM_REGISTRY_URL,
-      );
-    } else {
-      await setupNpmRc(root);
+    // Plain npm packages don't need the JSR registry mapping.
+    const hasJsrPackage = packages.some((pkg) => pkg instanceof JsrPackage);
+
+    if (hasJsrPackage) {
+      if (pkgManager instanceof Bun && !(await pkgManager.isNpmrcSupported())) {
+        // Bun v1.1.17 or lower doesn't support reading from .npmrc
+        // Bun v1.1.18+ supports npmrc
+        // https://bun.sh/blog/bun-v1.1.18#npmrc-support
+        // Global installs read the global bunfig, not the project one.
+        await setupBunfigToml(isGlobal ? os.homedir() : root);
+      } else if (pkgManager instanceof YarnBerry) {
+        // Yarn v2+ does not read from .npmrc intentionally
+        // https://yarnpkg.com/migration/guide#update-your-configuration-to-the-new-settings
+        await pkgManager.setConfigValue(
+          JSR_YARN_BERRY_CONFIG_KEY,
+          JSR_NPM_REGISTRY_URL,
+        );
+      } else if (isGlobal) {
+        // Global installs don't read the project .npmrc, so the registry
+        // mapping must be added to the user-level npmrc instead.
+        await setupNpmRcAtPath(getUserNpmRcPath());
+      } else {
+        await setupNpmRc(root);
+      }
     }
 
     console.log(`Installing ${styleText("cyan", packages.join(", "))}...`);
@@ -122,13 +153,13 @@ export async function install(packages: JsrPackage[], options: InstallOptions) {
   await pkgManager.install(packages, options);
 }
 
-export async function remove(packages: JsrPackage[], options: BaseOptions) {
+export async function remove(packages: Package[], options: BaseOptions) {
   const { pkgManager } = await getPkgManager(
     process.cwd(),
     options.pkgManagerName,
   );
   console.log(`Removing ${styleText("cyan", packages.join(", "))}...`);
-  await pkgManager.remove(packages);
+  await pkgManager.remove(packages, { global: options.global ?? false });
 }
 
 export interface PublishOptions {

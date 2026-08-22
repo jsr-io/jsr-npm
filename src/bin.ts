@@ -16,6 +16,8 @@ import {
   findProjectDir,
   JsrPackage,
   JsrPackageNameError,
+  NpmPackage,
+  type Package,
   prettyTime,
   setDebug,
   styleText,
@@ -71,6 +73,10 @@ ${
       ],
       ["-D, --save-dev", "Package will be added to devDependencies."],
       ["-O, --save-optional", "Package will be added to optionalDependencies."],
+      [
+        "-g, --global",
+        "Install or remove packages globally. Allows plain npm packages, e.g. `jsr i -g jsr`.",
+      ],
       ["--npm", "Use npm to remove and install packages."],
       ["--yarn", "Use yarn to remove and install packages."],
       ["--pnpm", "Use pnpm to remove and install packages."],
@@ -117,9 +123,30 @@ ${
 `);
 }
 
-function getPackages(positionals: string[], allowEmpty: boolean): JsrPackage[] {
+function getPackages(
+  positionals: string[],
+  allowEmpty: boolean,
+  // Plain npm packages are only allowed for global installs, e.g.
+  // `jsr i -g jsr` to install or update the jsr CLI itself.
+  allowNpmPackages: boolean,
+): Package[] {
   const pkgArgs = positionals.slice(1);
-  const packages = pkgArgs.map((p) => JsrPackage.from(p));
+  const packages = pkgArgs.map((p) => {
+    if (allowNpmPackages) {
+      try {
+        return JsrPackage.from(p);
+      } catch {
+        try {
+          return NpmPackage.from(p);
+        } catch {
+          throw new JsrPackageNameError(
+            `Invalid jsr or npm package name: "${p}"`,
+          );
+        }
+      }
+    }
+    return JsrPackage.from(p);
+  });
 
   if (!allowEmpty && pkgArgs.length === 0) {
     console.error(styleText("red", `Missing packages argument.`));
@@ -179,6 +206,7 @@ if (args.length === 0) {
         "save-prod": { type: "boolean", default: true, short: "P" },
         "save-dev": { type: "boolean", default: false, short: "D" },
         "save-optional": { type: "boolean", default: false, short: "O" },
+        global: { type: "boolean", default: false, short: "g" },
         "dry-run": { type: "boolean", default: false },
         "allow-slow-types": { type: "boolean", default: false },
         token: { type: "string" },
@@ -217,9 +245,13 @@ if (args.length === 0) {
       ? "npm"
       : null;
 
+    const isGlobal = options.values.global ?? false;
+
     if (cmd === "i" || cmd === "install" || cmd === "add") {
       run(async () => {
-        const packages = getPackages(options.positionals, true);
+        // `jsr i` without packages installs the project dependencies,
+        // which makes no sense globally.
+        const packages = getPackages(options.positionals, !isGlobal, isGlobal);
 
         await install(packages, {
           mode: options.values["save-dev"]
@@ -228,12 +260,13 @@ if (args.length === 0) {
             ? "optional"
             : "prod",
           pkgManagerName,
+          global: isGlobal,
         });
       });
     } else if (cmd === "r" || cmd === "uninstall" || cmd === "remove") {
       run(async () => {
-        const packages = getPackages(options.positionals, false);
-        await remove(packages, { pkgManagerName });
+        const packages = getPackages(options.positionals, false, isGlobal);
+        await remove(packages, { pkgManagerName, global: isGlobal });
       });
     } else if (cmd === "run") {
       const script = options.positionals[1];

@@ -237,7 +237,7 @@ export async function exec(
   captureOutput?: boolean,
 ): Promise<ExecOutput> {
   const cp = spawn(
-    cmd,
+    process.platform === "win32" && cmd.includes(" ") ? `"${cmd}"` : cmd,
     args.map((arg) => process.platform === "win32" ? `"${arg}"` : `'${arg}'`),
     {
       stdio: captureOutput ? "pipe" : "inherit",

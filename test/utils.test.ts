@@ -1,14 +1,73 @@
 import * as assert from "node:assert/strict";
+import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { describe, it } from "node:test";
 import { runInTempDir } from "./test_utils.ts";
 import {
+  exec,
   findProjectDir,
   JsrPackage,
   type PkgJson,
   writeJson,
   writeTextFile,
 } from "../src/utils.ts";
+
+describe("exec", { skip: process.platform !== "win32" }, () => {
+  it("preserves command shim lookup through PATH", async () => {
+    await runInTempDir(async (dir) => {
+      const binDir = path.join(dir, "bin");
+      await fs.mkdir(binDir);
+      await writeTextFile(
+        path.join(binDir, "test-command.cmd"),
+        '@echo off\r\ntype "%~dp0value.txt"\r\n',
+      );
+      await writeTextFile(path.join(binDir, "value.txt"), "shim output");
+      const output = await exec(
+        "test-command",
+        [],
+        dir,
+        { ...process.env, PATH: `${binDir};${process.env.PATH}` },
+        true,
+      );
+      assert.strictEqual(output.stdout, "shim output");
+    });
+  });
+
+  it("runs executables from paths containing spaces", async () => {
+    await runInTempDir(async (dir) => {
+      const binDir = path.join(dir, "bin with spaces");
+      await fs.mkdir(binDir);
+      const executable = path.join(binDir, "node.exe");
+      await fs.copyFile(process.execPath, executable);
+      const script = path.join(dir, "script with spaces.js");
+      await writeTextFile(script, "console.log(process.argv[2]);");
+
+      const output = await exec(
+        executable,
+        [script, "argument with spaces"],
+        dir,
+        undefined,
+        true,
+      );
+      assert.strictEqual(output.stdout.trim(), "argument with spaces");
+    });
+  });
+
+  it("runs command shims from paths containing spaces", async () => {
+    await runInTempDir(async (dir) => {
+      const command = path.join(dir, "command with spaces.cmd");
+      await writeTextFile(command, "@echo off\r\necho %~1\r\n");
+      const output = await exec(
+        command,
+        ["argument with spaces"],
+        dir,
+        undefined,
+        true,
+      );
+      assert.strictEqual(output.stdout.trim(), "argument with spaces");
+    });
+  });
+});
 
 describe("findProjectDir", () => {
   it("should return npm if package-lock.json is found", async () => {
